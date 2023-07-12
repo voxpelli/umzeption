@@ -1,17 +1,21 @@
 {
-  "name": "@voxpelli/node-module-template",
+  "name": "umzeption",
   "version": "0.0.0",
-  "description": "A GitHub template repo for node modules",
-  "homepage": "http://github.com/voxpelli/node-module-template",
+  "description": "A recursive umzug extension",
+  "homepage": "http://github.com/voxpelli/umzeption",
   "repository": {
     "type": "git",
-    "url": "git://github.com/voxpelli/node-module-template.git"
+    "url": "git://github.com/voxpelli/umzeption.git"
   },
-  "keywords": [],
+  "keywords": [
+    "umzug",
+    "migration",
+    "database"
+  ],
   "author": "Pelle Wessman <pelle@kodfabrik.se> (http://kodfabrik.se/)",
   "license": "MIT",
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.6.0"
   },
   "type": "module",
   "exports": "./index.js",
@@ -28,7 +32,7 @@
     "build:0": "run-s clean",
     "build:1-declaration": "tsc -p declaration.tsconfig.json",
     "build": "run-s build:*",
-    "check:installed-check": "installed-check -i eslint-plugin-jsdoc -i knip",
+    "check:installed-check": "installed-check",
     "check:knip": "knip",
     "check:lint": "eslint --report-unused-disable-directives .",
     "check:tsc": "tsc",
@@ -42,16 +46,25 @@
     "test-ci": "run-s test:*",
     "test": "run-s check test:*"
   },
+  "peerDependencies": {
+    "umzug": "^3.2.1"
+  },
   "dependencies": {
+    "@hapi/topo": "^6.0.2",
+    "@humanwhocodes/module-importer": "^1.0.1"
   },
   "devDependencies": {
     "@types/chai": "^4.3.5",
+    "@types/chai-as-promised": "^7.1.5",
     "@types/mocha": "^10.0.1",
-    "@types/node": "^16.18.38",
+    "@types/node": "^18.16.19",
+    "@types/sinon": "^10.0.15",
+    "@types/sinon-chai": "^3.2.9",
     "@voxpelli/eslint-config": "^18.0.0",
     "@voxpelli/tsconfig": "^8.0.0",
     "c8": "^8.0.0",
     "chai": "^4.3.7",
+    "chai-as-promised": "^7.1.1",
     "eslint": "^8.44.0",
     "eslint-plugin-es-x": "^7.1.0",
     "eslint-plugin-import": "^2.27.5",
@@ -67,7 +80,10 @@
     "knip": "^2.15.2",
     "mocha": "^10.2.0",
     "npm-run-all2": "^6.0.6",
+    "sinon": "^15.2.0",
+    "sinon-chai": "^3.7.0",
     "type-coverage": "^2.26.0",
-    "typescript": "~5.1.6"
+    "typescript": "~5.1.6",
+    "umzug": "^3.2.1"
   }
 }
