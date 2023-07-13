@@ -51,7 +51,8 @@
   },
   "dependencies": {
     "@hapi/topo": "^6.0.2",
-    "@humanwhocodes/module-importer": "^1.0.1"
+    "@humanwhocodes/module-importer": "^1.0.1",
+    "globby": "^13.2.2"
   },
   "devDependencies": {
     "@types/chai": "^4.3.5",
