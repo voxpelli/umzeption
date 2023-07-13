@@ -1,6 +1,6 @@
+import { createRequire } from 'node:module';
 import path from 'node:path';
 
-import { ModuleImporter } from '@humanwhocodes/module-importer';
 import { globby } from 'globby';
 
 import { loadDependencies } from './lib/dependencies.js';
@@ -15,10 +15,9 @@ async function resolveDefinition ({ filePath, glob, name: definitionName }, _con
   const cwd = path.dirname(filePath);
 
   const files = await globby(glob, { cwd, absolute: true });
-  const importer = new ModuleImporter(cwd);
 
   return Promise.all(files.map(async file => {
-    const migration = await importer.import(file);
+    const migration = await import(file);
 
     if (!migration || typeof migration !== 'object') {
       throw new TypeError('Invalid migration, expected an object');

@@ -16,7 +16,7 @@ chai.use(sinonChai);
 
 const should = chai.should();
 
-const context = Object.freeze({ normalizedPluginName: 'foo' });
+const context = Object.freeze({ filePath: 'bar/foo.js', normalizedPluginName: 'foo' });
 
 describe('Dependencies', () => {
   afterEach(() => {
@@ -47,24 +47,31 @@ describe('Dependencies', () => {
 
     it('should add a name if one is missing', () => {
       const result = processDefinition({}, context);
-      result.should.deep.equal({ name: context.normalizedPluginName });
+      result.should.deep.equal({
+        filePath: context.filePath,
+        name: context.normalizedPluginName,
+      });
     });
 
     it('should create and add a name for local definitions when one is missing', () => {
-      const result = processDefinition({}, { normalizedPluginName: './foo/bar.js' });
-      result.should.deep.equal({ name: 'bar' });
+      const result = processDefinition({}, {
+        filePath: 'foo',
+        normalizedPluginName: './foo/bar.js',
+      });
+      result.should.deep.equal({ filePath: 'foo', name: 'bar' });
     });
 
     it('should leave an already set name alone but shallow clone the definition', () => {
-      const input = { name: 'abc123' };
+      const input = { filePath: 'foo', name: 'abc123' };
       const result = processDefinition(input, context);
 
-      result.should.deep.equal({ name: 'abc123' });
+      result.should.deep.equal({ filePath: 'foo', name: 'abc123' });
       result.should.not.equal(input);
     });
 
     it('should leave additional properties on the definition but shallow clone it', () => {
       const input = {
+        filePath: 'foo',
         name: 'abc123',
         dependencies: ['foo'],
         abc: 123,
@@ -73,6 +80,7 @@ describe('Dependencies', () => {
       const result = processDefinition(input, context);
 
       result.should.deep.equal({
+        filePath: 'foo',
         name: 'abc123',
         dependencies: ['foo'],
         abc: 123,
