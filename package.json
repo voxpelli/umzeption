@@ -26,7 +26,10 @@
     "/index.d.ts.map",
     "lib/*.js",
     "lib/*.d.ts",
-    "lib/*.d.ts.map"
+    "lib/*.d.ts.map",
+    "lib/*/*.js",
+    "lib/*/*.d.ts",
+    "lib/*/*.d.ts.map"
   ],
   "scripts": {
     "build:0": "run-s clean",
