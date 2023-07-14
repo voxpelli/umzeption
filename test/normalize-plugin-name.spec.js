@@ -6,12 +6,14 @@
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
+import chaiPosixPath from 'chai-posix-path';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import { normalizePluginName } from '../lib/plugin-importer/normalize-plugin-name.js';
 
 chai.use(chaiAsPromised);
+chai.use(chaiPosixPath);
 chai.use(sinonChai);
 
 const should = chai.should();
@@ -67,13 +69,13 @@ describe('Normalize Plugin Name', () => {
 
     it('should return local path without prefix but normalized', () => {
       normalizePluginName('./foo/../bar/', 'example-prefix')
-        .should.equal('./bar/');
+        .should.be.posixPath('./bar/');
       normalizePluginName('./foo', 'example-prefix')
-        .should.equal('./foo');
+        .should.be.posixPath('./foo');
       normalizePluginName('./foo/../bar/')
-        .should.equal('./bar/');
+        .should.be.posixPath('./bar/');
       normalizePluginName('./foo')
-        .should.equal('./foo');
+        .should.be.posixPath('./foo');
     });
   });
 });
