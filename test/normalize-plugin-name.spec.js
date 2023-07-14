@@ -9,7 +9,7 @@ import chaiAsPromised from 'chai-as-promised';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { normalizePluginName } from '../lib/normalize-plugin-name.js';
+import { normalizePluginName } from '../lib/plugin-importer/normalize-plugin-name.js';
 
 chai.use(chaiAsPromised);
 chai.use(sinonChai);

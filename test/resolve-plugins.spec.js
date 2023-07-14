@@ -10,7 +10,7 @@ import chaiAsPromised from 'chai-as-promised';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { resolvePluginsInOrder } from '../lib/resolve-plugins.js';
+import { resolvePluginsInOrder } from '../lib/plugin-importer/resolve-plugins.js';
 
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
