@@ -1,28 +1,14 @@
-/// <reference types="node" />
-/// <reference types="mocha" />
-/// <reference types="chai" />
-/// <reference types="sinon" />
-/// <reference types="sinon-chai" />
+import { describe, it } from 'node:test';
 
 import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
 
 import { processDefinition } from '../lib/dependencies.js';
-
-chai.use(chaiAsPromised);
-chai.use(sinonChai);
 
 const should = chai.should();
 
 const context = Object.freeze({ filePath: 'bar/foo.js', normalizedPluginName: 'foo' });
 
 describe('Dependencies', () => {
-  afterEach(() => {
-    sinon.restore();
-  });
-
   describe('processDefinition()', () => {
     it('should throw on a non-object definition', () => {
       should.Throw(() => { processDefinition(undefined, context); }, Error, 'Invalid umzeption definition, expected an object');

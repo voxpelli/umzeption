@@ -1,8 +1,4 @@
-/// <reference types="node" />
-/// <reference types="mocha" />
-/// <reference types="chai" />
-/// <reference types="sinon" />
-/// <reference types="sinon-chai" />
+import { describe, it, afterEach } from 'node:test';
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';

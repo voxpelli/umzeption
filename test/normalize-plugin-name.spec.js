@@ -1,28 +1,15 @@
-/// <reference types="node" />
-/// <reference types="mocha" />
-/// <reference types="chai" />
-/// <reference types="sinon" />
-/// <reference types="sinon-chai" />
+import { describe, it } from 'node:test';
 
 import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
 import chaiPosixPath from 'chai-posix-path';
-import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
 
 import { normalizePluginName } from '../lib/plugin-importer/normalize-plugin-name.js';
 
-chai.use(chaiAsPromised);
 chai.use(chaiPosixPath);
-chai.use(sinonChai);
 
 const should = chai.should();
 
 describe('Normalize Plugin Name', () => {
-  afterEach(() => {
-    sinon.restore();
-  });
-
   describe('normalizePluginName()', () => {
     it('should require a substantive string pluginName argument', () => {
       // @ts-ignore

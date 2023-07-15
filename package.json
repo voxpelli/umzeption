@@ -46,7 +46,7 @@
     "clean": "run-p clean:*",
     "prepare": "husky install",
     "prepublishOnly": "run-s build",
-    "test:mocha": "c8 --reporter=lcov --reporter text mocha 'test/**/*.spec.js'",
+    "test:node": "c8 --reporter=lcov --reporter text node --test test/*.spec.js",
     "test-ci": "run-s test:*",
     "test": "run-s check test:*"
   },
@@ -60,7 +60,6 @@
   "devDependencies": {
     "@types/chai": "^4.3.5",
     "@types/chai-as-promised": "^7.1.5",
-    "@types/mocha": "^10.0.1",
     "@types/node": "^18.16.19",
     "@types/sinon": "^10.0.15",
     "@types/sinon-chai": "^3.2.9",
@@ -84,7 +83,6 @@
     "husky": "^8.0.3",
     "installed-check": "^8.0.0",
     "knip": "^2.15.5",
-    "mocha": "^10.2.0",
     "npm-run-all2": "^6.0.6",
     "sinon": "^15.2.0",
     "sinon-chai": "^3.7.0",

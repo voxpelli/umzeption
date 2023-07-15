@@ -1,26 +1,12 @@
-/// <reference types="node" />
-/// <reference types="mocha" />
-/// <reference types="chai" />
-/// <reference types="sinon" />
-/// <reference types="sinon-chai" />
+import { describe, it } from 'node:test';
 
 import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
 
 import { getExtensionlessBasename } from '../lib/utils.js';
-
-chai.use(chaiAsPromised);
-chai.use(sinonChai);
 
 const should = chai.should();
 
 describe('Utils', () => {
-  afterEach(() => {
-    sinon.restore();
-  });
-
   describe('getExtensionlessBasename()', () => {
     it('should require a string argument', () => {
       // @ts-ignore
