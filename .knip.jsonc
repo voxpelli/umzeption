@@ -1,4 +1,5 @@
 {
   "$schema": "https://unpkg.com/knip@2/schema.json",
-  "ignore": ["test-published-types/index.js"]
+  "ignore": ["test-published-types/index.js"],
+  "ignoreDependencies": ["@voxpelli/node-test-pretty-reporter"]
 }
