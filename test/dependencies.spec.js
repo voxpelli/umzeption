@@ -1,39 +1,60 @@
 import { describe, it } from 'node:test';
-
-import chai from 'chai';
+import assert from 'node:assert/strict';
 
 import { processDefinition } from '../lib/dependencies.js';
-
-const should = chai.should();
 
 const context = Object.freeze({ filePath: 'bar/foo.js', normalizedPluginName: 'foo' });
 
 describe('Dependencies', () => {
   describe('processDefinition()', () => {
     it('should throw on a non-object definition', () => {
-      should.Throw(() => { processDefinition(undefined, context); }, Error, 'Invalid umzeption definition, expected an object');
+      assert.throws(() => { processDefinition(undefined, context); }, {
+        name: 'TypeError',
+        message: 'Invalid umzeption definition, expected an object',
+      });
       // eslint-disable-next-line unicorn/no-null
-      should.Throw(() => { processDefinition(null, context); }, Error, 'Invalid umzeption definition, expected an object');
-      should.Throw(() => { processDefinition('test', context); }, Error, 'Invalid umzeption definition, expected an object');
-      should.Throw(() => { processDefinition(() => 'test', context); }, Error, 'Invalid umzeption definition, expected an object');
+      assert.throws(() => { processDefinition(null, context); }, {
+        name: 'TypeError',
+        message: 'Invalid umzeption definition, expected an object',
+      });
+      assert.throws(() => { processDefinition('test', context); }, {
+        name: 'TypeError',
+        message: 'Invalid umzeption definition, expected an object',
+      });
+      assert.throws(() => { processDefinition(() => 'test', context); }, {
+        name: 'TypeError',
+        message: 'Invalid umzeption definition, expected an object',
+      });
     });
 
     it('should throw on an invalid object definition', () => {
-      should.Throw(() => { processDefinition({ name: 123 }, context); }, Error, 'Invalid umzeption definition');
-      should.Throw(() => { processDefinition({ dependencies: 123 }, context); }, Error, 'Invalid umzeption definition');
-      should.Throw(() => { processDefinition({ name: undefined }, context); }, Error, 'Invalid umzeption definition');
-      should.Throw(() => { processDefinition({ dependencies: undefined }, context); }, Error, 'Invalid umzeption definition');
+      assert.throws(() => { processDefinition({ name: 123 }, context); }, {
+        name: 'Error',
+        message: 'Invalid umzeption definition',
+      });
+      assert.throws(() => { processDefinition({ dependencies: 123 }, context); }, {
+        name: 'Error',
+        message: 'Invalid umzeption definition',
+      });
+      assert.throws(() => { processDefinition({ name: undefined }, context); }, {
+        name: 'Error',
+        message: 'Invalid umzeption definition',
+      });
+      assert.throws(() => { processDefinition({ dependencies: undefined }, context); }, {
+        name: 'Error',
+        message: 'Invalid umzeption definition',
+      });
     });
 
     it('should return an object', () => {
       const result = processDefinition({}, context);
-      should.exist(result);
-      result.should.be.an('object');
+      assert.ok(result);
+      assert(typeof result === 'object', 'processDefinition returns an object');
     });
 
     it('should add a name if one is missing', () => {
       const result = processDefinition({}, context);
-      result.should.deep.equal({
+      assert.deepStrictEqual(result, {
         filePath: context.filePath,
         name: context.normalizedPluginName,
       });
@@ -44,15 +65,15 @@ describe('Dependencies', () => {
         filePath: 'foo',
         normalizedPluginName: './foo/bar.js',
       });
-      result.should.deep.equal({ filePath: 'foo', name: 'bar' });
+      assert.deepStrictEqual(result, { filePath: 'foo', name: 'bar' });
     });
 
     it('should leave an already set name alone but shallow clone the definition', () => {
       const input = { filePath: 'foo', name: 'abc123' };
       const result = processDefinition(input, context);
 
-      result.should.deep.equal({ filePath: 'foo', name: 'abc123' });
-      result.should.not.equal(input);
+      assert.deepStrictEqual(result, { filePath: 'foo', name: 'abc123' });
+      assert.notStrictEqual(result, input);
     });
 
     it('should leave additional properties on the definition but shallow clone it', () => {
@@ -65,13 +86,13 @@ describe('Dependencies', () => {
 
       const result = processDefinition(input, context);
 
-      result.should.deep.equal({
+      assert.deepStrictEqual(result, {
         filePath: 'foo',
         name: 'abc123',
         dependencies: ['foo'],
         abc: 123,
       });
-      result.should.not.equal(input);
+      assert.notStrictEqual(result, input);
     });
   });
 });

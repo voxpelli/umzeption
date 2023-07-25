@@ -58,18 +58,12 @@
     "globby": "^13.2.2"
   },
   "devDependencies": {
-    "@types/chai": "^4.3.5",
-    "@types/chai-as-promised": "^7.1.5",
     "@types/node": "^18.17.0",
     "@types/sinon": "^10.0.15",
-    "@types/sinon-chai": "^3.2.9",
     "@voxpelli/eslint-config": "^19.0.0",
-    "@voxpelli/node-test-pretty-reporter": "^1.0.1",
+    "@voxpelli/node-test-pretty-reporter": "^1.0.2",
     "@voxpelli/tsconfig": "^8.0.0",
     "c8": "^8.0.0",
-    "chai": "^4.3.7",
-    "chai-as-promised": "^7.1.1",
-    "chai-posix-path": "^1.0.0",
     "desm": "^1.3.0",
     "eslint": "^8.45.0",
     "eslint-plugin-es-x": "^7.2.0",
@@ -86,7 +80,6 @@
     "knip": "^2.17.0",
     "npm-run-all2": "^6.0.6",
     "sinon": "^15.2.0",
-    "sinon-chai": "^3.7.0",
     "type-coverage": "^2.26.0",
     "typescript": "~5.1.6",
     "umzug": "^3.2.1"

@@ -1,19 +1,12 @@
 import { describe, it, afterEach } from 'node:test';
+import assert from 'node:assert/strict';
 
-import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
 import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
 
 import { filename } from 'desm';
 import { Umzug, memoryStorage } from 'umzug';
 
 import { umzeption } from '../index.js';
-
-chai.use(chaiAsPromised);
-chai.use(sinonChai);
-
-chai.should();
 
 describe('Integration', () => {
   afterEach(() => {
@@ -43,7 +36,7 @@ describe('Integration', () => {
 
       const executed = await storage.executed({ context });
 
-      executed.should.deep.equal([
+      assert.deepStrictEqual(executed, [
         'test-dependency|foo-01.js',
         'main|foo-01.js',
       ]);

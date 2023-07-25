@@ -1,18 +1,11 @@
 /* eslint-disable unicorn/no-useless-undefined */
 
 import { describe, it, afterEach } from 'node:test';
+import assert from 'node:assert/strict';
 
-import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
 import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
 
 import { resolvePluginsInOrder } from '../lib/plugin-importer/resolve-plugins.js';
-
-chai.use(chaiAsPromised);
-chai.use(sinonChai);
-
-const should = chai.should();
 
 describe('Resolve Plugins', () => {
   afterEach(() => {
@@ -23,21 +16,23 @@ describe('Resolve Plugins', () => {
     describe('basic', () => {
       it('should require plugin list to be an array', () => {
         // @ts-ignore
-        return resolvePluginsInOrder()
-          .should.be.rejectedWith(/Expected plugins to be an array of strings/);
+        return assert.rejects(resolvePluginsInOrder(), {
+          message: /Expected plugins to be an array of strings/,
+        });
       });
 
       it('should require loadPlugin to be a function', () => {
         // @ts-ignore
-        return resolvePluginsInOrder(['foo'])
-          .should.be.rejectedWith(/Expected loadPlugin to be a function/);
+        return assert.rejects(resolvePluginsInOrder(['foo']), {
+          message: /Expected loadPlugin to be a function/,
+        });
       });
 
       it('should return an empty plugin list straight up', async () => {
         const loadPluginStub = sinon.stub();
         const result = await resolvePluginsInOrder([], loadPluginStub);
-        should.exist(result);
-        result.should.deep.equal([]);
+        assert.ok(result);
+        assert.deepStrictEqual(result, []);
       });
 
       it('should handle a simple single dependency free plugin', async () => {
@@ -47,8 +42,8 @@ describe('Resolve Plugins', () => {
         loadPluginStub.onFirstCall().returns(plugin);
 
         const result = await resolvePluginsInOrder(['foo'], loadPluginStub);
-        should.exist(result);
-        result.should.have.property('0', plugin);
+        assert.ok(result);
+        assert.strictEqual(result[0], plugin);
       });
     });
 
@@ -60,8 +55,9 @@ describe('Resolve Plugins', () => {
         loadPluginStub.onSecondCall().returns({});
         loadPluginStub.onThirdCall().returns(undefined);
 
-        return resolvePluginsInOrder(['foo', 'bar', 'abc'], loadPluginStub)
-          .should.be.rejectedWith(/Plugins missing: "foo", "abc"/);
+        return assert.rejects(resolvePluginsInOrder(['foo', 'bar', 'abc'], loadPluginStub), {
+          message: /Plugins missing: "foo", "abc"/,
+        });
       });
 
       it('should handle single missing dependency', () => {
@@ -70,8 +66,9 @@ describe('Resolve Plugins', () => {
         loadPluginStub.onFirstCall().returns({});
         loadPluginStub.onSecondCall().returns(undefined);
 
-        return resolvePluginsInOrder(['foo', 'bar'], loadPluginStub)
-          .should.be.rejectedWith(/Plugin missing: "bar"/);
+        return assert.rejects(resolvePluginsInOrder(['foo', 'bar'], loadPluginStub), {
+          message: /Plugin missing: "bar"/,
+        });
       });
 
       it('should wrap errors thrown when loading', () => {
@@ -79,8 +76,9 @@ describe('Resolve Plugins', () => {
 
         loadPluginStub.throws();
 
-        return resolvePluginsInOrder(['foo'], loadPluginStub)
-          .should.be.rejectedWith(/Failed to load plugin "foo"/);
+        return assert.rejects(resolvePluginsInOrder(['foo'], loadPluginStub), {
+          message: /Failed to load plugin "foo"/,
+        });
       });
     });
 
@@ -104,8 +102,8 @@ describe('Resolve Plugins', () => {
         });
 
         const result = await resolvePluginsInOrder(['foo', 'bar'], loadPluginStub);
-        should.exist(result);
-        result.should.deep.equal([
+        assert.ok(result);
+        assert.deepStrictEqual(result, [
           {
             name: 'bar',
           },
@@ -140,8 +138,9 @@ describe('Resolve Plugins', () => {
           dependencies: ['foo'],
         });
 
-        return resolvePluginsInOrder(['foo'], loadPluginStub)
-          .should.be.rejectedWith(/Failed to add plugin "bar"/);
+        return assert.rejects(resolvePluginsInOrder(['foo'], loadPluginStub), {
+          message: /Failed to add plugin "bar"/,
+        });
       });
 
       it('should allow optional dependencies by default', async () => {
@@ -151,8 +150,8 @@ describe('Resolve Plugins', () => {
         loadPluginStub.withArgs('bar').returns('abc123');
 
         const result = await resolvePluginsInOrder(['foo?', 'bar'], loadPluginStub, true);
-        should.exist(result);
-        result.should.deep.equal([false, 'abc123']);
+        assert.ok(result);
+        assert.deepStrictEqual(result, [false, 'abc123']);
       });
 
       it('should be possible to prohibit optional dependencies', () => {
@@ -161,8 +160,9 @@ describe('Resolve Plugins', () => {
         loadPluginStub.withArgs('foo').returns(undefined);
         loadPluginStub.withArgs('bar').returns('abc123');
 
-        return resolvePluginsInOrder(['foo?', 'bar'], loadPluginStub)
-          .should.be.rejectedWith(/Plugin missing: "foo\?"/);
+        return assert.rejects(resolvePluginsInOrder(['foo?', 'bar'], loadPluginStub), {
+          message: /Plugin missing: "foo\?"/,
+        });
       });
     });
   });
