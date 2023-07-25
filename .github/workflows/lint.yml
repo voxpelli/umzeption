@@ -16,3 +16,6 @@ permissions:
 jobs:
   lint:
     uses: voxpelli/ghatemplates/.github/workflows/lint.yml@main
+    with:
+      node-versions: '18.17.0'
+
