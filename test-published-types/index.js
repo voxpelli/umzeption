@@ -8,7 +8,7 @@ export async function doIt () {
   const umzug = new Umzug({
     migrations: umzeption({
       dependencies: ['./fixtures/test-dependency'],
-      filePath: filename(import.meta.url),
+      pluginDir: filename(import.meta.url),
       glob: ['fixtures/migrations/*.js'],
       name: 'main',
     }),

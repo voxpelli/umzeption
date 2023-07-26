@@ -6,6 +6,6 @@ import { umzeptionLookup } from './lib/lookup.js';
  * @returns {(context: T) => Promise<import('umzug').InputMigrations<T>>}
  */
 export function umzeption (config) {
-  // TODO: Make name and filePath optional and resolve here instead?
+  // TODO: Make name and pluginDir optional and resolve here instead?
   return async context => umzeptionLookup(config, context);
 }

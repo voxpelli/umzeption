@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 import { processDefinition } from '../lib/dependencies.js';
 
-const context = Object.freeze({ filePath: 'bar/foo.js', normalizedPluginName: 'foo' });
+const context = Object.freeze({ pluginDir: 'bar/foo.js', normalizedPluginName: 'foo' });
 
 describe('Dependencies', () => {
   describe('processDefinition()', () => {
@@ -55,30 +55,30 @@ describe('Dependencies', () => {
     it('should add a name if one is missing', () => {
       const result = processDefinition({}, context);
       assert.deepStrictEqual(result, {
-        filePath: context.filePath,
+        pluginDir: context.pluginDir,
         name: context.normalizedPluginName,
       });
     });
 
     it('should create and add a name for local definitions when one is missing', () => {
       const result = processDefinition({}, {
-        filePath: 'foo',
+        pluginDir: 'foo',
         normalizedPluginName: './foo/bar.js',
       });
-      assert.deepStrictEqual(result, { filePath: 'foo', name: 'bar' });
+      assert.deepStrictEqual(result, { pluginDir: 'foo', name: 'bar' });
     });
 
     it('should leave an already set name alone but shallow clone the definition', () => {
-      const input = { filePath: 'foo', name: 'abc123' };
+      const input = { pluginDir: 'foo', name: 'abc123' };
       const result = processDefinition(input, context);
 
-      assert.deepStrictEqual(result, { filePath: 'foo', name: 'abc123' });
+      assert.deepStrictEqual(result, { pluginDir: 'foo', name: 'abc123' });
       assert.notStrictEqual(result, input);
     });
 
     it('should leave additional properties on the definition but shallow clone it', () => {
       const input = {
-        filePath: 'foo',
+        pluginDir: 'foo',
         name: 'abc123',
         dependencies: ['foo'],
         abc: 123,
@@ -87,7 +87,7 @@ describe('Dependencies', () => {
       const result = processDefinition(input, context);
 
       assert.deepStrictEqual(result, {
-        filePath: 'foo',
+        pluginDir: 'foo',
         name: 'abc123',
         dependencies: ['foo'],
         abc: 123,

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 import sinon from 'sinon';
 
-import { filename } from 'desm';
+import { dirname } from 'desm';
 import { Umzug, memoryStorage } from 'umzug';
 
 import { umzeption } from '../index.js';
@@ -22,7 +22,7 @@ describe('Integration', () => {
         migrations: umzeption({
           dependencies: ['./fixtures/test-dependency'],
           // TODO: SHould not be necessary?
-          filePath: filename(import.meta.url),
+          pluginDir: dirname(import.meta.url),
           glob: ['fixtures/migrations/*.js'],
           // TODO: SHould not be necessary
           name: 'main',
