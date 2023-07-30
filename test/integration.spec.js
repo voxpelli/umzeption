@@ -21,11 +21,8 @@ describe('Integration', () => {
       const umzug = new Umzug({
         migrations: umzeption({
           dependencies: ['./fixtures/test-dependency'],
-          // TODO: SHould not be necessary?
-          pluginDir: dirname(import.meta.url),
           glob: ['fixtures/migrations/*.js'],
-          // TODO: SHould not be necessary
-          name: 'main',
+          pluginDir: dirname(import.meta.url),
         }),
         context,
         storage,
