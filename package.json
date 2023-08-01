@@ -54,8 +54,8 @@
     "umzug": "^3.2.1"
   },
   "dependencies": {
-    "@hapi/topo": "^6.0.2",
-    "globby": "^13.2.2"
+    "globby": "^13.2.2",
+    "plugin-importer": "^0.1.0"
   },
   "devDependencies": {
     "@types/node": "^18.17.1",
