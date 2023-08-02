@@ -2,10 +2,8 @@
 
 A recursive umzug extension
 
-<!--
 [![npm version](https://img.shields.io/npm/v/umzeption.svg?style=flat)](https://www.npmjs.com/package/umzeption)
 [![npm downloads](https://img.shields.io/npm/dm/umzeption.svg?style=flat)](https://www.npmjs.com/package/umzeption)
--->
 [![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg)](https://github.com/voxpelli/eslint-config)
 [![Module type: ESM](https://img.shields.io/badge/module%20type-esm-brightgreen)](https://github.com/voxpelli/badges-cjs-esm)
 [![Types in JS](https://img.shields.io/badge/types_in_js-yes-brightgreen)](https://github.com/voxpelli/types-in-js)
@@ -13,25 +11,10 @@ A recursive umzug extension
 
 ## Usage
 
-### Simple
+### Migrations
 
-```javascript
-import { something } from '@voxpelli/node-module-template';
+TODO: Document
 
-// Use that something
-```
+### Installation
 
-## API
-
-### `something(input, { configParam }) => Promise<output>`
-
-Takes a value (`input`), does something configured by the config (`configParam`) and returns the processed value asyncly(`output`)
-
-## Similar modules
-
-* [`example`](https://example.com/) – is similar in this way
-
-## See also
-
-* [Announcement blog post](#)
-* [Announcement tweet](#)
+TODO: Implement
