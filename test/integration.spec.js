@@ -22,7 +22,7 @@ describe('Integration', () => {
         migrations: umzeption({
           dependencies: ['./fixtures/test-dependency'],
           glob: ['fixtures/migrations/*.js'],
-          pluginDir: dirname(import.meta.url),
+          meta: import.meta,
         }),
         context,
         storage,
