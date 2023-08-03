@@ -4,7 +4,6 @@
 /node_modules
 /.env
 /.nyc_output
-/test-published-types/node_modules
 
 # We're a library, so please, no lock files
 /package-lock.json
@@ -14,5 +13,6 @@
 *.d.ts
 *.d.ts.map
 !/lib/advanced-types.d.ts
+!/index.d.ts
 
 # Library specific ones

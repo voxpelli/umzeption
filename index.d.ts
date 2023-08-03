@@ -1,3 +1,11 @@
+export type {
+  UmzeptionDefinition
+} from './lib/definition.js';
+
+export type {
+  UmzeptionLookupOptions
+} from './lib/lookup.js';
+
 export {
   assertToBeUmzeptionDefinition,
   ensureUmzeptionDefinition,
@@ -5,5 +13,5 @@ export {
 } from './lib/definition.js';
 
 export {
-  umzeption,
+  umzeption
 } from './lib/main.js';
