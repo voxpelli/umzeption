@@ -4,6 +4,6 @@
   "version": "0.0.0",
   "type": "module",
   "dependencies": {
-    "@voxpelli/node-module-template": "file:.."
+    "umzeption": "file:.."
   }
 }
