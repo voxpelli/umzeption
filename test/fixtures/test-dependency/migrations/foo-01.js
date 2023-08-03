@@ -1,2 +1,5 @@
-export async function up () {}
-export async function down () {}
+import sinon from 'sinon';
+
+export const up = sinon.stub().resolves();
+
+export const down = sinon.stub().resolves();
