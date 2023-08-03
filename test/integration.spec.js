@@ -47,6 +47,8 @@ describe('Integration', () => {
       const executed = await storage.executed({ context });
 
       assert.deepStrictEqual(executed, [
+        'test-dependency:install',
+        'main:install',
         'test-dependency|foo-01.js',
         'main|foo-01.js',
       ]);
@@ -81,6 +83,8 @@ describe('Integration', () => {
       const executed = await storage.executed({ context });
 
       assert.deepStrictEqual(executed, [
+        'test-dependency:install',
+        'main:install',
         'test-dependency|foo-01.js',
         'main|foo-01.js',
       ]);
