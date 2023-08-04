@@ -8,14 +8,20 @@ import { Umzug, memoryStorage } from 'umzug';
 import { umzeption } from '../index.js';
 
 import { down as downMain, up as upMain } from './fixtures/migrations/foo-01.js';
+import { installSchema as installSchemaTestDependency } from './fixtures/test-dependency/index.js';
 import { down as downTestDependency, up as upTestDependency } from './fixtures/test-dependency/migrations/foo-01.js';
 
-function getMigrationStubCallCount (addToUp = 0, addToDown = 0) {
+function getDependencyStubCallCount ({
+  down = 0,
+  installSchema = 0,
+  up = 0,
+} = {}) {
   return {
-    downMain: downMain.callCount + addToDown,
-    downTestDependency: downTestDependency.callCount + addToDown,
-    upMain: upMain.callCount + addToUp,
-    upTestDependency: upTestDependency.callCount + addToUp,
+    downMain: downMain.callCount + down,
+    downTestDependency: downTestDependency.callCount + down,
+    installSchemaTestDependency: installSchemaTestDependency.callCount + installSchema,
+    upMain: upMain.callCount + up,
+    upTestDependency: upTestDependency.callCount + up,
   };
 }
 
@@ -24,76 +30,149 @@ describe('Integration', () => {
     sinon.restore();
   });
 
-  describe('main', () => {
-    it('should resolve dependencies and create proper migrations', async () => {
-      const context = {};
-      const storage = memoryStorage();
+  it('should resolve dependencies and create proper migrations', async () => {
+    const context = {};
+    const storage = memoryStorage();
 
-      const expectedCallCount = getMigrationStubCallCount(1);
+    const expectedCallCount = getDependencyStubCallCount({ up: 1 });
 
-      const umzug = new Umzug({
-        migrations: umzeption({
-          dependencies: ['./fixtures/test-dependency'],
-          glob: ['fixtures/migrations/*.js'],
-          meta: import.meta,
-        }),
-        context,
-        storage,
-        logger: sinon.stub(console),
-      });
-
-      await umzug.up();
-
-      const executed = await storage.executed({ context });
-
-      assert.deepStrictEqual(executed, [
-        'test-dependency:install',
-        'main:install',
-        'test-dependency|foo-01.js',
-        'main|foo-01.js',
-      ]);
-
-      assert.deepEqual(
-        getMigrationStubCallCount(),
-        expectedCallCount,
-        'Unexpected call count of migration stubs'
-      );
+    const umzug = new Umzug({
+      migrations: umzeption({
+        dependencies: ['./fixtures/test-dependency'],
+        glob: ['fixtures/migrations/*.js'],
+        meta: import.meta,
+      }),
+      context,
+      storage,
+      logger: sinon.stub(console),
     });
 
-    it('should resolve dependencies and noop register all migrations', async () => {
-      const context = {};
-      const storage = memoryStorage();
+    await umzug.up();
 
-      const expectedCallCount = getMigrationStubCallCount();
+    const executed = await storage.executed({ context });
 
-      const umzug = new Umzug({
-        migrations: umzeption({
-          dependencies: ['./fixtures/test-dependency'],
-          glob: ['fixtures/migrations/*.js'],
-          meta: import.meta,
-          noop: true,
-        }),
-        context,
-        storage,
-        logger: sinon.stub(console),
-      });
+    assert.deepStrictEqual(executed, [
+      'test-dependency:install',
+      'main:install',
+      'test-dependency|foo-01.js',
+      'main|foo-01.js',
+    ]);
 
-      await umzug.up();
+    assert.deepEqual(
+      getDependencyStubCallCount(),
+      expectedCallCount,
+      'Unexpected call count of dependency stubs'
+    );
+  });
 
-      const executed = await storage.executed({ context });
+  it('should support noop registering all migrations', async () => {
+    const context = {};
+    const storage = memoryStorage();
 
-      assert.deepStrictEqual(executed, [
-        'test-dependency:install',
-        'main:install',
-        'test-dependency|foo-01.js',
-        'main|foo-01.js',
-      ]);
+    const expectedCallCount = getDependencyStubCallCount();
 
-      assert.deepEqual(
-        getMigrationStubCallCount(),
-        expectedCallCount,
-        'Unexpected calls to migration stubs'
-      );
+    const umzug = new Umzug({
+      migrations: umzeption({
+        dependencies: ['./fixtures/test-dependency'],
+        glob: ['fixtures/migrations/*.js'],
+        meta: import.meta,
+        noop: true,
+      }),
+      context,
+      storage,
+      logger: sinon.stub(console),
     });
+
+    await umzug.up();
+
+    const executed = await storage.executed({ context });
+
+    assert.deepStrictEqual(executed, [
+      'test-dependency:install',
+      'main:install',
+      'test-dependency|foo-01.js',
+      'main|foo-01.js',
+    ]);
+
+    assert.deepEqual(
+      getDependencyStubCallCount(),
+      expectedCallCount,
+      'Unexpected calls to dependency stubs'
+    );
+  });
+
+  it('should support install mode', async () => {
+    const context = {};
+    const storage = memoryStorage();
+
+    const expectedCallCount = getDependencyStubCallCount({ installSchema: 1 });
+
+    const installSchema = sinon.stub();
+
+    const umzug = new Umzug({
+      migrations: umzeption({
+        dependencies: ['./fixtures/test-dependency'],
+        glob: ['fixtures/migrations/*.js'],
+        meta: import.meta,
+        install: true,
+        installSchema,
+      }),
+      context,
+      storage,
+      logger: sinon.stub(console),
+    });
+
+    await umzug.up();
+
+    const executed = await storage.executed({ context });
+
+    assert.deepStrictEqual(executed, [
+      'test-dependency:install',
+      'main:install',
+      'test-dependency|foo-01.js',
+      'main|foo-01.js',
+    ]);
+
+    assert.deepEqual(
+      getDependencyStubCallCount(),
+      expectedCallCount,
+      'Unexpected calls of dependency stubs'
+    );
+
+    assert.strictEqual(installSchema.callCount, 1);
+  });
+
+  it('should work without specifying top level installSchema', async () => {
+    const context = {};
+    const storage = memoryStorage();
+
+    const expectedCallCount = getDependencyStubCallCount({ installSchema: 1 });
+
+    const umzug = new Umzug({
+      migrations: umzeption({
+        dependencies: ['./fixtures/test-dependency'],
+        meta: import.meta,
+        install: true,
+      }),
+      context,
+      storage,
+      logger: sinon.stub(console),
+    });
+
+    await umzug.up();
+
+    const executed = await storage.executed({ context });
+
+    assert.deepStrictEqual(executed, [
+      'test-dependency:install',
+      'main:install',
+      'test-dependency|foo-01.js',
+    ]);
+
+    assert.deepEqual(
+      getDependencyStubCallCount(),
+      expectedCallCount,
+      'Unexpected calls of dependency stubs'
+    );
   });
 });
