@@ -15,7 +15,7 @@ import { down as downTestDependency, up as upTestDependency } from './fixtures/t
 import { installSchema as installSchemaTestDependency2 } from './fixtures/test-dependency-2/index.js';
 import { down as downTestDependency2, up as upTestDependency2 } from './fixtures/test-dependency-2/migrations/bar-01.js';
 
-import { installSchema as installSchemaTestDependency3 } from './fixtures/test-dependency-3/index.js';
+import { umzeptionConfig as umzeptionConfigTestDependency3 } from './fixtures/test-dependency-3/index.js';
 import { down as downTestDependency3, up as upTestDependency3 } from './fixtures/test-dependency-3/migrations/abc-01.js';
 
 function getDependencyStubCallCount ({
@@ -31,7 +31,7 @@ function getDependencyStubCallCount ({
 
     installSchemaTestDependency: installSchemaTestDependency.callCount + installSchema,
     installSchemaTestDependency2: installSchemaTestDependency2.callCount + installSchema,
-    installSchemaTestDependency3: installSchemaTestDependency3.callCount + installSchema,
+    installSchemaTestDependency3: umzeptionConfigTestDependency3.installSchema.callCount + installSchema,
 
     upMain: upMain.callCount + up,
     upTestDependency: upTestDependency.callCount + up,
