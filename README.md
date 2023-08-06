@@ -11,45 +11,36 @@ A recursive [Umzug](https://github.com/sequelize/umzug) extension with migration
 
 ## Usage
 
-### Set up Umzeption
-
-```javascript
-import { umzeption } from 'umzeption';
-
-const umzeptionSetup = umzeption({
-  // Which dependencies we want to install migrations and schemas from
-  dependencies: [
-    '@yikesable/foo',
-    '@yikesable/bar',
-  ],
-  // Optional: Which migrations do we have ourselves?
-  glob: ['migrations/*.js'],
-  // Optional: Which migrations do we have ourselves?
-  async installSchema ({ context: queryInterface }) {},
-  // Optional: Set to true if it should be a fresh install rather than a migration
-  install: true,
-  // Optional: Used to inform where to resolve "glob" from
-  meta: import.meta,
-  // Optional: Can be used instead of "meta" and if none are set, then process.cwd() is the default
-  // cwd: process.cwd(),
-});
-```
-
-### Use with Umzug
-
 ```javascript
 import pg from 'pg';
-import { UmzeptionPgStorage, createUmzeptionPgContext } from 'umzeption';
+import {
+  UmzeptionPgStorage,
+  createUmzeptionPgContext,
+  umzeption,
+} from 'umzeption';
 import { Umzug } from 'umzug';
 
-const pool = new pg.Pool({
-  host: 'localhost',
-  user: 'database-user',
-});
-
 const umzug = new Umzug({
-  migrations: umzeptionSetup,
-  context: createUmzeptionPgContext(pool),
+  migrations: umzeption({
+    // Which dependencies we want to install migrations and schemas from
+    dependencies: [
+      '@yikesable/foo',
+      '@yikesable/bar',
+    ],
+    // Optional: Which migrations do we have ourselves?
+    glob: ['migrations/*.js'],
+    // Optional: Which migrations do we have ourselves?
+    async installSchema ({ context: queryInterface }) {},
+    // Optional: Set to true if it should be a fresh install rather than a migration
+    install: true,
+    // Optional: Used to inform where to resolve "glob" from
+    meta: import.meta,
+    // Optional: Can be used instead of "meta" and if none are set, then process.cwd() is the default
+    // cwd: process.cwd(),
+  }),
+  // Other contexts can be created and plugins can support multiple contexts
+  context: createUmzeptionPgContext(new pg.Pool({ connectionString: '...' })),
+  // Any type of storage can be used, but UmzeptionStorage  ones re-use the context's connection + ensures a match with the context types
   storage: new UmzeptionPgStorage(),
   logger: console,
 });
@@ -73,14 +64,26 @@ The dependency is expected to provide one of these two at its top level
 
 ### Through `umzeptionConfig` property
 
-Makes it easy to type and keeps all Umzeption related stuff grouped
+Makes it easy to enforce types and keeps all Umzeption related stuff grouped together
 
 ```javascript
-/** @satisfies {import('umzeption').UmzeptionDependency<import('sequelize').AbstractQueryInterface>} */
+/** @satisfies {import('umzeption').UmzeptionDependency} */
 export const umzeptionConfig = {
   dependencies: ['@yikesable/abc'],
   glob: ['migrations/*.js'],
-  async installSchema ({ context: queryInterface }) {},
+  async installSchema ({ context }) {
+    if (context.type !== 'pg') {
+      throw new Error(`Unsupported context type: ${context.type}`);
+    }
+
+    const tables = await getTables();
+
+    await context.value.transact(async client => {
+      for (const table of tables) {
+        await client.query(table);
+      }
+    });
+  },
 };
 ```
 
@@ -89,7 +92,21 @@ export const umzeptionConfig = {
 ```javascript
 export const dependencies = ['@yikesable/abc'];
 export const glob = ['migrations/*.js'];
-export async function installSchema ({ context: queryInterface }) {}
+/** @type {import('umzeption').UmzeptionDependency["installSchema"]} */
+export async function installSchema ({ context }) {
+    if (context.type !== 'pg') {
+      throw new Error(`Unsupported context type: ${context.type}`);
+    }
+
+    const tables = await getTables();
+
+    await context.value.transact(async client => {
+      for (const table of tables) {
+        await client.query(table);
+      }
+    });
+  },
+};
 ```
 
 ## See also
