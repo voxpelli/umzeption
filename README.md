@@ -42,7 +42,7 @@ import pg from 'pg';
 import { UmzeptionPgStorage, createUmzeptionPgContext } from 'umzeption';
 import { Umzug } from 'umzug';
 
-const pool = new Pool({
+const pool = new pg.Pool({
   host: 'localhost',
   user: 'database-user',
 });
