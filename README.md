@@ -39,7 +39,10 @@ const umzug = new Umzug({
     // cwd: process.cwd(),
   }),
   // Other contexts can be created and plugins can support multiple contexts
-  context: createUmzeptionPgContext(new pg.Pool({ connectionString: '...' })),
+  context: createUmzeptionPgContext(new pg.Pool({
+    allowExitOnIdle: true,
+    connectionString: '...',
+  })),
   // Any type of storage can be used, but UmzeptionStorage  ones re-use the context's connection + ensures a match with the context types
   storage: new UmzeptionPgStorage(),
   logger: console,
