@@ -70,11 +70,11 @@ describe('Complex Integration', () => {
       'test-dependency:install',
       'test-dependency-2:install',
       'test-dependency-3:install',
-      'main:install',
+      ':install',
       'test-dependency|foo-01.js',
       'test-dependency-2|bar-01.js',
       'test-dependency-3|abc-01.js',
-      'main|foo-01.js',
+      'foo-01.js',
     ]);
 
     assert.deepEqual(

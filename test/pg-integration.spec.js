@@ -84,7 +84,7 @@ describe('PG Integration', () => {
       [
         'INSERT INTO umzeption_migrations (name) VALUES ($1)',
         [
-          'main:install',
+          ':install',
         ],
       ],
       [
@@ -96,7 +96,7 @@ describe('PG Integration', () => {
       [
         'INSERT INTO umzeption_migrations (name) VALUES ($1)',
         [
-          'main|foo-01.js',
+          'foo-01.js',
         ],
       ],
     ]);

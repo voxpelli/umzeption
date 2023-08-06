@@ -12,6 +12,7 @@ export interface UmzeptionDependency<T extends AnyUmzeptionContext = AnyUmzeptio
 // The fully resolved internal definition
 export interface UmzeptionDefinition<T extends AnyUmzeptionContext = AnyUmzeptionContext> extends UmzeptionDependency<T> {
   name: string
+  noPrefix?: boolean
   pluginDir: string
 }
 

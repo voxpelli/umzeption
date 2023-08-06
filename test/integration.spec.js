@@ -54,9 +54,9 @@ describe('Integration', () => {
 
     assert.deepStrictEqual(executed, [
       'test-dependency:install',
-      'main:install',
+      ':install',
       'test-dependency|foo-01.js',
-      'main|foo-01.js',
+      'foo-01.js',
     ]);
 
     assert.deepEqual(
@@ -91,9 +91,9 @@ describe('Integration', () => {
 
     assert.deepStrictEqual(executed, [
       'test-dependency:install',
-      'main:install',
+      ':install',
       'test-dependency|foo-01.js',
-      'main|foo-01.js',
+      'foo-01.js',
     ]);
 
     assert.deepEqual(
@@ -131,9 +131,9 @@ describe('Integration', () => {
 
     assert.deepStrictEqual(executed, [
       'test-dependency:install',
-      'main:install',
+      ':install',
       'test-dependency|foo-01.js',
-      'main|foo-01.js',
+      'foo-01.js',
     ]);
 
     assert.deepEqual(
@@ -169,7 +169,7 @@ describe('Integration', () => {
 
     assert.deepStrictEqual(executed, [
       'test-dependency:install',
-      'main:install',
+      ':install',
       'test-dependency|foo-01.js',
     ]);
 
