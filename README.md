@@ -38,15 +38,19 @@ const umzeptionSetup = umzeption({
 ### Use with Umzug
 
 ```javascript
-import { Sequelize } from 'sequelize';
-import { Umzug, SequelizeStorage } from 'umzug';
+import pg from 'pg';
+import { UmzeptionPgStorage, createUmzeptionPgContext } from 'umzeption';
+import { Umzug } from 'umzug';
 
-// TODO: add example for how to create umzeptionContexts
+const pool = new Pool({
+  host: 'localhost',
+  user: 'database-user',
+});
 
 const umzug = new Umzug({
   migrations: umzeptionSetup,
-  context: umzeptionContext,
-  storage: new SequelizeStorage({ sequelize }),
+  context: createUmzeptionPgContext(pool),
+  storage: new UmzeptionPgStorage(),
   logger: console,
 });
 

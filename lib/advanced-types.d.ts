@@ -1,4 +1,7 @@
+// @ts-ignore Avoid strict dependency on 'pg'
+import type { Pool as PgPool, PoolClient as PgPoolClient } from 'pg';
 import type { PluginDefinition } from 'plugin-importer';
+import type { MigrationParams, UmzugStorage } from 'umzug';
 
 // What a dependency should provide
 export interface UmzeptionDependency<T extends AnyUmzeptionContext = AnyUmzeptionContext> extends PluginDefinition {
@@ -24,10 +27,24 @@ export interface UmzeptionLookupOptions<T extends AnyUmzeptionContext> extends
   noop?: boolean
 }
 
+// *** Storage ***
+
+export abstract class UmzeptionStorage<T extends AnyUmzeptionContext> implements UmzugStorage<T> {
+  // From UmzugStorage
+  logMigration: (params: MigrationParams<T>) => Promise<void>;
+  unlogMigration: (params: MigrationParams<T>) => Promise<void>;
+  executed: (meta: Pick<MigrationParams<T>, 'context'>) => Promise<string[]>;
+
+  // Extensions
+  ensureTable (context: T): Promise<void>
+  query (context: T, query: string, ...values: string[]): Promise<{ rows: Array<{ [column: string]: unknown }> }>
+}
+
 // *** Context definitions ***
 
 export interface DefineUmzeptionContexts {
-  unknown: UmzeptionContext<'unknown'>,
+  pg: UmzeptionContext<'pg', FastifyPostgresStyleDb>,
+  unknown: UmzeptionContext<'unknown', unknown>,
 }
 
 type ValidUmzeptionContexts = {
@@ -46,10 +63,24 @@ interface BaseUmzeptionContext {
   value: unknown
 }
 
-export interface UmzeptionContext<T extends UmzeptionContextTypes, V = unknown> extends BaseUmzeptionContext {
+export interface UmzeptionContext<T extends UmzeptionContextTypes, V> extends BaseUmzeptionContext {
   type: string extends T ? never : (T extends string ? T : never);
   value: V
 }
+
+// *** Postgres context **
+
+// TODO: Extract pg context into a "umzeption-pg" module
+
+type FastifyPostgresStyleTransactCallback = (client: PgPoolClient) => void;
+type FastifyPostgresStyleTransact = (callback: FastifyPostgresStyleTransactCallback) => void;
+
+export type FastifyPostgresStyleDb = {
+  pool: PgPool;
+  query: PgPool["query"];
+  connect: PgPool["connect"];
+  transact: FastifyPostgresStyleTransact;
+};
 
 // *** Helpers ***
 
