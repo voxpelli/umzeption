@@ -5,7 +5,7 @@ import sinon from 'sinon';
 
 import { Umzug, memoryStorage } from 'umzug';
 
-import { umzeption } from '../index.js';
+import { createUmzeptionContext, umzeption } from '../index.js';
 
 import { down as downMain, up as upMain } from './fixtures/migrations/foo-01.js';
 import { installSchema as installSchemaTestDependency } from './fixtures/test-dependency/index.js';
@@ -31,7 +31,8 @@ describe('Integration', () => {
   });
 
   it('should resolve dependencies and create proper migrations', async () => {
-    const context = {};
+    const context = createUmzeptionContext('unknown', 'test');
+
     const storage = memoryStorage();
 
     const expectedCallCount = getDependencyStubCallCount({ up: 1 });
@@ -66,7 +67,8 @@ describe('Integration', () => {
   });
 
   it('should support noop registering all migrations', async () => {
-    const context = {};
+    const context = createUmzeptionContext('unknown', 'test');
+
     const storage = memoryStorage();
 
     const expectedCallCount = getDependencyStubCallCount();
@@ -102,7 +104,8 @@ describe('Integration', () => {
   });
 
   it('should support install mode', async () => {
-    const context = {};
+    const context = createUmzeptionContext('unknown', 'test');
+
     const storage = memoryStorage();
 
     const expectedCallCount = getDependencyStubCallCount({ installSchema: 1 });
@@ -143,7 +146,8 @@ describe('Integration', () => {
   });
 
   it('should work without specifying top level installSchema', async () => {
-    const context = {};
+    const context = createUmzeptionContext('unknown', 'test');
+
     const storage = memoryStorage();
 
     const expectedCallCount = getDependencyStubCallCount({ installSchema: 1 });

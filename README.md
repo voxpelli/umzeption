@@ -41,9 +41,11 @@ const umzeptionSetup = umzeption({
 import { Sequelize } from 'sequelize';
 import { Umzug, SequelizeStorage } from 'umzug';
 
+// TODO: add example for how to create umzeptionContexts
+
 const umzug = new Umzug({
   migrations: umzeptionSetup,
-  context: sequelize.getQueryInterface(),
+  context: umzeptionContext,
   storage: new SequelizeStorage({ sequelize }),
   logger: console,
 });

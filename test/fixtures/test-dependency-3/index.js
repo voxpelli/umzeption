@@ -1,6 +1,6 @@
 import sinon from 'sinon';
 
-/** @satisfies {import('../../../index.js').UmzeptionDependency<unknown>} */
+/** @satisfies {import('../../../index.js').UmzeptionDependency} */
 export const umzeptionConfig = {
   glob: ['migrations/*.js'],
 

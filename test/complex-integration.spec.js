@@ -5,7 +5,7 @@ import sinon from 'sinon';
 
 import { Umzug, memoryStorage } from 'umzug';
 
-import { umzeption } from '../index.js';
+import { createUmzeptionContext, umzeption } from '../index.js';
 
 import { down as downMain, up as upMain } from './fixtures/migrations/foo-01.js';
 
@@ -46,7 +46,7 @@ describe('Complex Integration', () => {
   });
 
   it('should run full dependency tree without running anything twice', async () => {
-    const context = {};
+    const context = createUmzeptionContext('unknown', 'test');
     const storage = memoryStorage();
 
     const expectedCallCount = getDependencyStubCallCount({ up: 1 });
