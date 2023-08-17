@@ -123,10 +123,10 @@ import { installSchemaFromString } from 'umzeption';
 export const umzeptionConfig = {
   dependencies: ['@yikesable/abc'],
   glob: ['migrations/*.js'],
-  // installSchemaFromString accepts a string or a Promise resolving to a string
-  installSchema: installSchemaFromString(
-    readFile(new URL('create-tables.sql', import.meta.url), 'utf8')
-  ),
+  installSchema: async ({ context }) => {
+    const tables = await readFile(new URL('create-tables.sql', import.meta.url), 'utf8');
+    return installSchemaFromString(context, tables);
+  },
 };
 ```
 
