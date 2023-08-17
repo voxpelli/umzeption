@@ -23,6 +23,7 @@ export {
 
 export {
   installSchemaFromString,
+  pgInstallSchemaFromString,
 } from './lib/schema-helper.js';
 
 export {
