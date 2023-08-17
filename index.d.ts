@@ -22,5 +22,9 @@ export {
 } from './lib/main.js';
 
 export {
+  installSchemaFromString,
+} from './lib/schema-helper.js';
+
+export {
   BaseUmzeptionStorage,
 } from './lib/storage.js';

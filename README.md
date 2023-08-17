@@ -112,6 +112,24 @@ export async function installSchema ({ context }) {
 };
 ```
 
+### Using `installSchemaFromString` helper
+
+```javascript
+import { readFile } from 'node:fs/promises';
+
+import { installSchemaFromString } from 'umzeption';
+
+/** @satisfies {import('umzeption').UmzeptionDependency} */
+export const umzeptionConfig = {
+  dependencies: ['@yikesable/abc'],
+  glob: ['migrations/*.js'],
+  // installSchemaFromString accepts a string or a Promise resolving to a string
+  installSchema: installSchemaFromString(
+    readFile(new URL('create-tables.sql', import.meta.url), 'utf8')
+  ),
+};
+```
+
 ## See also
 
 * [`umzug`](https://github.com/sequelize/umzug) – the base system this module is meant to be paired with
