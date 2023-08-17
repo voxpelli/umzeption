@@ -74,10 +74,10 @@
     "@voxpelli/eslint-config": "^19.0.0",
     "@voxpelli/tsconfig": "^8.0.0",
     "c8": "^8.0.1",
-    "eslint": "^8.46.0",
+    "eslint": "^8.47.0",
     "eslint-plugin-es-x": "^7.2.0",
     "eslint-plugin-import": "^2.28.0",
-    "eslint-plugin-jsdoc": "^46.4.5",
+    "eslint-plugin-jsdoc": "^46.4.6",
     "eslint-plugin-mocha": "^10.1.0",
     "eslint-plugin-n": "^16.0.1",
     "eslint-plugin-promise": "^6.1.1",
@@ -86,12 +86,12 @@
     "eslint-plugin-unicorn": "^48.0.1",
     "husky": "^8.0.3",
     "installed-check": "^8.0.0",
-    "knip": "^2.19.0",
+    "knip": "^2.19.4",
     "npm-run-all2": "^6.0.6",
     "pg": "^8.11.2",
     "sinon": "^15.2.0",
     "type-coverage": "^2.26.0",
     "typescript": "~5.1.6",
-    "umzug": "^3.2.1"
+    "umzug": "^3.3.1"
   }
 }
