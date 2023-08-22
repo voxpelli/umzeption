@@ -1,5 +1,7 @@
 import type { Equal } from './util-types.d.ts';
 
+// A mechanism for third-party extendible discriminated unions: https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
+
 interface Declaration {
   type: string
 }
