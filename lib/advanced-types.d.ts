@@ -1,7 +1,14 @@
-// @ts-ignore Avoid strict dependency on 'pg'
+// @ts-ignore Ignoring to avoid strict dependency on 'pg'
 import type { Pool as PgPool, PoolClient as PgPoolClient } from 'pg';
 import type { PluginDefinition } from 'plugin-importer';
 import type { MigrationParams, UmzugStorage } from 'umzug';
+
+import type {
+  AnyDeclaration,
+  AnyDeclarationType,
+  ValidDeclaration
+} from './types/declaration-types.d.ts';
+import type { PartialKeys } from './types/util-types.d.ts';
 
 // What a dependency should provide
 export interface UmzeptionDependency<T extends AnyUmzeptionContext = AnyUmzeptionContext> extends PluginDefinition {
@@ -43,29 +50,21 @@ export abstract class UmzeptionStorage<T extends AnyUmzeptionContext> implements
 
 // *** Context definitions ***
 
+interface UmzeptionContextExtras {
+  value: unknown
+}
+
 export interface DefineUmzeptionContexts {
   pg: UmzeptionContext<'pg', FastifyPostgresStyleDb>,
   unknown: UmzeptionContext<'unknown', unknown>,
 }
 
-type ValidUmzeptionContexts = {
-  [key in keyof DefineUmzeptionContexts as (
-    DefineUmzeptionContexts[key] extends BaseUmzeptionContext
-      ? Equal<key, DefineUmzeptionContexts[key]["type"]>
-      : never
-  )]: string extends key ? never : DefineUmzeptionContexts[key]
-}
+export type AnyUmzeptionContext = AnyDeclaration<DefineUmzeptionContexts, UmzeptionContextExtras>;
+export type UmzeptionContextTypes = AnyDeclarationType<DefineUmzeptionContexts, UmzeptionContextExtras>
 
-export type AnyUmzeptionContext = ValidUmzeptionContexts[keyof ValidUmzeptionContexts];
-export type UmzeptionContextTypes = AnyUmzeptionContext["type"];
-
-interface BaseUmzeptionContext {
-  type: string
-  value: unknown
-}
-
-export interface UmzeptionContext<T extends UmzeptionContextTypes, V> extends BaseUmzeptionContext {
-  type: string extends T ? never : (T extends string ? T : never);
+export interface UmzeptionContext<T extends UmzeptionContextTypes, V>
+  extends ValidDeclaration<DefineUmzeptionContexts, UmzeptionContextExtras, T>
+{
   value: V
 }
 
@@ -82,9 +81,3 @@ export type FastifyPostgresStyleDb = {
   connect: PgPool["connect"];
   transact: FastifyPostgresStyleTransact;
 };
-
-// *** Helpers ***
-
-type PartialKeys<T, Keys extends keyof T> = Omit<T, Keys> & Partial<Pick<T, Keys>>;
-type StringLiteral<T> = string extends T ? never : T;
-type Equal<A, B> = A extends B ? A : never;
