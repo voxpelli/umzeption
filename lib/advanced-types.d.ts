@@ -6,9 +6,9 @@ import type { MigrationParams, UmzugStorage } from 'umzug';
 import type {
   AnyDeclaration,
   AnyDeclarationType,
+  PartialKeys,
   ValidDeclaration
-} from './types/declaration-types.d.ts';
-import type { PartialKeys } from './types/util-types.d.ts';
+} from '@voxpelli/type-helpers';
 
 // What a dependency should provide
 export interface UmzeptionDependency<T extends AnyUmzeptionContext = AnyUmzeptionContext> extends PluginDefinition {
