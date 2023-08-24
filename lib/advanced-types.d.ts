@@ -63,7 +63,7 @@ export type AnyUmzeptionContext = AnyDeclaration<DefineUmzeptionContexts, Umzept
 export type UmzeptionContextTypes = AnyDeclarationType<DefineUmzeptionContexts, UmzeptionContextExtras>
 
 export interface UmzeptionContext<T extends UmzeptionContextTypes, V>
-  extends ValidDeclaration<DefineUmzeptionContexts, UmzeptionContextExtras, T>
+  extends ValidDeclaration<T, DefineUmzeptionContexts, UmzeptionContextExtras>
 {
   value: V
 }

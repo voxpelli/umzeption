@@ -64,7 +64,7 @@
     }
   },
   "dependencies": {
-    "@voxpelli/type-helpers": "^1.0.1",
+    "@voxpelli/type-helpers": "^2.1.0",
     "globby": "^13.2.2",
     "plugin-importer": "^0.1.1"
   },
