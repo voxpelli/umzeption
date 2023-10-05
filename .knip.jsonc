@@ -4,5 +4,6 @@
     "index.js",
     "index.d.ts"
   ],
-  "ignoreBinaries": ["find"]
+  "ignoreBinaries": ["find"],
+  "ignoreDependencies": ["@types/pg", "pg"]
 }
