@@ -71,7 +71,7 @@
   },
   "devDependencies": {
     "@types/node": "^18.18.3",
-    "@types/pg": "^8.10.3",
+    "@types/pg": "^8.10.9",
     "@types/sinon": "^10.0.18",
     "@voxpelli/eslint-config": "^19.0.0",
     "@voxpelli/tsconfig": "^8.0.0",
@@ -92,8 +92,8 @@
     "npm-run-all2": "^6.1.1",
     "pg": "^8.11.2",
     "sinon": "^16.1.0",
-    "type-coverage": "^2.26.3",
-    "typescript": "~5.1.6",
+    "type-coverage": "^2.27.1",
+    "typescript": "~5.3.3",
     "umzug": "^3.3.1"
   }
 }
