@@ -53,7 +53,7 @@
   "peerDependencies": {
     "@types/pg": "^8.10.2",
     "pg": "^8.11.2",
-    "umzug": "^3.2.1"
+    "umzug": "^3.8.1"
   },
   "peerDependenciesMeta": {
     "@types/pg": {
@@ -85,7 +85,7 @@
     "sinon": "^18.0.0",
     "type-coverage": "^2.29.0",
     "typescript": "~5.5.2",
-    "umzug": "^3.3.1",
+    "umzug": "^3.8.1",
     "validate-conventional-commit": "^1.0.3"
   }
 }
