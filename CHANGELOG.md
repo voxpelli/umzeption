@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/voxpelli/umzeption/compare/v0.4.0...v0.4.1) (2024-06-29)
+
+
+### 🧹 Chores
+
+* **deps:** update linting ([93cbcc0](https://github.com/voxpelli/umzeption/commit/93cbcc0588e206879f86c6455687af66040e1ef5))
+
 ## [0.4.0](https://github.com/voxpelli/umzeption/compare/v0.3.3...v0.4.0) (2024-06-24)
 
 
