@@ -7,7 +7,7 @@ import type {
   AnyDeclaration,
   AnyDeclarationType,
   PartialKeys,
-  ValidDeclaration
+  ValidDeclaration,
 } from '@voxpelli/type-helpers';
 
 // What a dependency should provide
@@ -27,9 +27,8 @@ export interface UmzeptionLookupOptions<T extends AnyUmzeptionContext> extends
   PartialKeys<
     Omit<UmzeptionDependency<T>, 'pluginDir'>,
     'glob' | 'installSchema'
-  >
-{
-  cwd?: string|undefined
+  > {
+  cwd?: string | undefined
   install?: boolean
   meta?: ImportMeta
   noop?: boolean
@@ -44,8 +43,8 @@ export abstract class UmzeptionStorage<T extends AnyUmzeptionContext> implements
   executed: (meta: Pick<MigrationParams<T>, 'context'>) => Promise<string[]>;
 
   // Extensions
-  ensureTable (context: T): Promise<void>
-  query (context: T, query: string, ...values: string[]): Promise<{ rows: Array<{ [column: string]: unknown }> }>
+  ensureTable (context: T): Promise<void>;
+  query (context: T, query: string, ...values: string[]): Promise<{ rows: Array<{ [column: string]: unknown }> }>;
 }
 
 // *** Context definitions ***
@@ -60,11 +59,10 @@ export interface DefineUmzeptionContexts {
 }
 
 export type AnyUmzeptionContext = AnyDeclaration<DefineUmzeptionContexts, UmzeptionContextExtras>;
-export type UmzeptionContextTypes = AnyDeclarationType<DefineUmzeptionContexts, UmzeptionContextExtras>
+export type UmzeptionContextTypes = AnyDeclarationType<DefineUmzeptionContexts, UmzeptionContextExtras>;
 
 export interface UmzeptionContext<T extends UmzeptionContextTypes, V>
-  extends ValidDeclaration<T, DefineUmzeptionContexts, UmzeptionContextExtras>
-{
+  extends ValidDeclaration<T, DefineUmzeptionContexts, UmzeptionContextExtras> {
   value: V
 }
 
@@ -77,7 +75,7 @@ type FastifyPostgresStyleTransact = (callback: FastifyPostgresStyleTransactCallb
 
 export type FastifyPostgresStyleDb = {
   pool: PgPool;
-  query: PgPool["query"];
-  connect: PgPool["connect"];
+  query: PgPool['query'];
+  connect: PgPool['connect'];
   transact: FastifyPostgresStyleTransact;
 };
