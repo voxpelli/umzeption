@@ -86,6 +86,6 @@
     "type-coverage": "^2.29.0",
     "typescript": "~5.5.2",
     "umzug": "^3.8.1",
-    "validate-conventional-commit": "^1.0.3"
+    "validate-conventional-commit": "^1.0.4"
   }
 }
