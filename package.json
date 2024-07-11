@@ -84,7 +84,7 @@
     "pg": "^8.12.0",
     "sinon": "^18.0.0",
     "type-coverage": "^2.29.1",
-    "typescript": "~5.5.2",
+    "typescript": "~5.5.3",
     "umzug": "^3.8.1",
     "validate-conventional-commit": "^1.0.4"
   }
