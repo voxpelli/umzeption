@@ -70,7 +70,7 @@
     "plugin-importer": "^0.1.1"
   },
   "devDependencies": {
-    "@types/node": "^18.19.39",
+    "@types/node": "^18.19.44",
     "@types/pg": "^8.11.6",
     "@types/sinon": "^17.0.3",
     "@voxpelli/eslint-config": "^20.0.0-beta.6",
@@ -84,7 +84,7 @@
     "pg": "^8.12.0",
     "sinon": "^18.0.0",
     "type-coverage": "^2.29.1",
-    "typescript": "~5.5.2",
+    "typescript": "~5.5.4",
     "umzug": "^3.8.1",
     "validate-conventional-commit": "^1.0.4"
   }
