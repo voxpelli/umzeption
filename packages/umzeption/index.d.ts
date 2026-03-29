@@ -2,6 +2,7 @@ export type {
   AnyUmzeptionContext,
   DefineUmzeptionContexts,
   UmzeptionContext,
+  UmzeptionDefinition,
   UmzeptionDependency,
   UmzeptionLookupOptions,
   UmzeptionStorage,
@@ -13,6 +14,7 @@ export {
 
 export {
   umzeption,
+  umzeptionPending,
 } from './lib/main.js';
 
 export {
