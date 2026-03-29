@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { importAbsolutePath } from 'plugin-importer';
 
-/** @type {((pattern: string, options: { cwd: string, absolute: boolean }) => AsyncIterable<string>) | undefined} */
+/** @type {((pattern: string, options: { cwd: string }) => AsyncIterable<string>) | undefined} */
 let fsGlob;
 
 try {
@@ -67,8 +67,9 @@ async function resolveGlob (patterns, cwd) {
   if (fsGlob) {
     const files = [];
     for (const pattern of patterns) {
-      for await (const file of fsGlob(pattern, { cwd, absolute: true })) {
-        files.push(file);
+      // fs.glob returns paths relative to cwd; resolve to absolute
+      for await (const file of fsGlob(pattern, { cwd })) {
+        files.push(path.resolve(cwd, file));
       }
     }
     return files;
