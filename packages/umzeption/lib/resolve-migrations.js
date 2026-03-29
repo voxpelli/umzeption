@@ -74,6 +74,19 @@ async function resolveGlob (patterns, cwd) {
     }
     return files;
   }
+  if (!process.env['UMZEPTION_SUPPRESS_WARNINGS']) {
+    for (const pattern of patterns) {
+      if (pattern.includes('**')) {
+        process.emitWarning(
+          `Glob pattern "${pattern}" uses "**" which requires Node 22+. ` +
+          'The fallback only supports single-directory patterns like "dir/*.js". ' +
+          'Set UMZEPTION_SUPPRESS_WARNINGS=1 to silence this warning.',
+          'UmzeptionWarning'
+        );
+        break;
+      }
+    }
+  }
   return readdirGlob(patterns, cwd);
 }
 
@@ -92,6 +105,14 @@ export async function resolveMigrations (definition, noop = false) {
   } = definition;
 
   const files = (await resolveGlob(glob, pluginDir)).sort();
+
+  if (files.length === 0 && glob.length > 0 && !process.env['UMZEPTION_SUPPRESS_WARNINGS']) {
+    process.emitWarning(
+      `No migration files matched glob patterns [${glob.join(', ')}] in "${pluginDir}" for definition "${definitionName}". ` +
+      'Set UMZEPTION_SUPPRESS_WARNINGS=1 to silence this warning.',
+      'UmzeptionWarning'
+    );
+  }
 
   /** @type {Set<string>} */
   const seenIds = new Set();
@@ -114,7 +135,11 @@ export async function resolveMigrations (definition, noop = false) {
     const migration = await importAbsolutePath(file).catch(
       /** @param {unknown} cause */
       cause => {
-        throw new Error(`Failed to import migration "${migrationId}" from "${file}"`, { cause });
+        const code = cause instanceof Error && 'code' in cause ? /** @type {string} */ (cause.code) : '';
+        const hint = code === 'ERR_REQUIRE_ESM'
+          ? ' Hint: this file uses CommonJS require() but the migration is an ES module. Use import() or rename to .mjs.'
+          : '';
+        throw new Error(`Failed to import migration "${migrationId}" from "${file}".${hint}`, { cause });
       }
     );
 
