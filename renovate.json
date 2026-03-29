@@ -1,7 +1,6 @@
 {
   "extends": [
-    "github>voxpelli/renovate-config",
-    "local>voxpelli/renovate-config:workspaces"
+    "github>voxpelli/renovate-config"
   ],
   "packageRules": [
     {

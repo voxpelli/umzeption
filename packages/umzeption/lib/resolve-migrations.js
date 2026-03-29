@@ -1,9 +1,20 @@
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 
-// @ts-ignore -- fs.glob is available in Node 22+, undefined in Node 20
-import { glob as fsGlob } from 'node:fs/promises';
 import { importAbsolutePath } from 'plugin-importer';
+
+/** @type {((pattern: string, options: { cwd: string, absolute: boolean }) => AsyncIterable<string>) | undefined} */
+let fsGlob;
+
+try {
+  // fs.glob is available in Node 22+, not in Node 20
+  const fs = await import('node:fs/promises');
+  if (typeof fs.glob === 'function') {
+    fsGlob = fs.glob;
+  }
+} catch {
+  // fs.glob unavailable — will use readdirGlob fallback
+}
 
 /**
  * Simple pattern matching for a single filename (no path separators).
@@ -53,10 +64,9 @@ async function readdirGlob (patterns, cwd) {
  * @returns {Promise<string[]>}
  */
 async function resolveGlob (patterns, cwd) {
-  if (typeof fsGlob === 'function') {
+  if (fsGlob) {
     const files = [];
     for (const pattern of patterns) {
-      // @ts-ignore -- fsGlob is fs.glob, available Node 22+
       for await (const file of fsGlob(pattern, { cwd, absolute: true })) {
         files.push(file);
       }

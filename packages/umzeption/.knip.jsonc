@@ -6,5 +6,5 @@
     "lib/advanced-types.d.ts",
     "typetests/**/*.tst.ts"
   ],
-  "ignoreDependencies": ["@types/pg", "pg"]
+  "ignoreDependencies": []
 }
