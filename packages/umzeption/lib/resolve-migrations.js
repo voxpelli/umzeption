@@ -91,12 +91,30 @@ async function resolveGlob (patterns, cwd) {
 }
 
 /**
+ * @template T
+ * @param {Promise<T>} promise
+ * @param {number} ms
+ * @param {string} label
+ * @returns {Promise<T>}
+ */
+function withTimeout (promise, ms, label) {
+  return Promise.race([
+    promise,
+    new Promise((_resolve, reject) => {
+      setTimeout(() => reject(new Error(`Migration "${label}" timed out after ${ms}ms`)), ms);
+    }),
+  ]);
+}
+
+/**
  * @template {import('./advanced-types.d.ts').AnyUmzeptionContext} T
  * @param {Pick<import('./advanced-types.d.ts').UmzeptionDefinition<T>, 'glob' | 'name' | 'noPrefix' | 'pluginDir'>} definition
  * @param {boolean} [noop] - if set then the up/down migrations will have no operation
+ * @param {{ timeout?: number }} [options]
  * @returns {Promise<import('umzug').RunnableMigration<T>[]>}
  */
-export async function resolveMigrations (definition, noop = false) {
+export async function resolveMigrations (definition, noop = false, options) {
+  const timeout = options?.timeout;
   const {
     glob,
     name: definitionName,
@@ -171,10 +189,18 @@ export async function resolveMigrations (definition, noop = false) {
       path: file,
       up: noop
         ? async () => {}
-        : async ({ context }) => up.call(migration, ({ path: file, name, context })),
+        : async ({ context }) => {
+          /** @type {Promise<unknown>} */
+          const p = up.call(migration, ({ path: file, name, context }));
+          return timeout ? withTimeout(p, timeout, name) : p;
+        },
       down: noop
         ? async () => {}
-        : async ({ context }) => down.call(migration, ({ path: file, name, context })),
+        : async ({ context }) => {
+          /** @type {Promise<unknown>} */
+          const p = down.call(migration, ({ path: file, name, context }));
+          return timeout ? withTimeout(p, timeout, name) : p;
+        },
     };
 
     return result;
