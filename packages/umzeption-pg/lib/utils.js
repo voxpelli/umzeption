@@ -42,6 +42,7 @@ async function transact (fn, options) {
 export function createFastifyPostgresStyleDb (pool) {
   return {
     connect: pool.connect.bind(pool),
+    destroy: () => pool.end(),
     pool,
     query: pool.query.bind(pool),
     transact: transact.bind(pool),

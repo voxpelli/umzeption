@@ -5,6 +5,7 @@ export interface FastifyPostgresStyleDb {
   pool: Pool;
   query: Pool['query'];
   connect: Pool['connect'];
+  destroy: () => Promise<void>;
   transact: (fn: (client: PoolClient) => Promise<void>, options?: { isolationLevel?: string }) => Promise<void>;
 }
 
