@@ -2,6 +2,8 @@
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "entry": [
     "index.js",
-    "index.d.ts"
-  ]
+    "index.d.ts",
+    "lib/types.d.ts"
+  ],
+  "ignoreDependencies": ["@types/pg"]
 }
