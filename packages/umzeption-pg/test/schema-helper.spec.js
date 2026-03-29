@@ -82,6 +82,61 @@ CREATE TABLE bar (name TEXT NOT NULL);
       sinon.restore();
     });
 
+    it('should strip block comments from SQL', async () => {
+      /** @type {string[]} */
+      const queries = [];
+      const queryStub = sinon.stub().callsFake(async (/** @type {string} */ sql) => {
+        queries.push(sql);
+        return { rows: [] };
+      });
+      sinon.stub(pg.Pool.prototype, 'connect').resolves({
+        query: queryStub,
+        release: sinon.stub(),
+      });
+
+      const pool = new pg.Pool({ connectionString: 'postgresql://localhost/test' });
+      const context = createUmzeptionPgContext(pool);
+
+      await pgInstallSchemaFromString(context, `
+/* This is a block comment */
+CREATE TABLE foo (id SERIAL PRIMARY KEY);
+
+/* Another
+   multi-line
+   block comment */
+CREATE TABLE bar (name TEXT NOT NULL);
+      `);
+
+      const createStatements = queries.filter(q => typeof q === 'string' && q.startsWith('CREATE TABLE'));
+      assert.equal(createStatements.length, 2, 'should execute 2 statements after stripping block comments');
+
+      sinon.restore();
+    });
+
+    it('should preserve semicolons inside string literals', async () => {
+      /** @type {string[]} */
+      const queries = [];
+      const queryStub = sinon.stub().callsFake(async (/** @type {string} */ sql) => {
+        queries.push(sql);
+        return { rows: [] };
+      });
+      sinon.stub(pg.Pool.prototype, 'connect').resolves({
+        query: queryStub,
+        release: sinon.stub(),
+      });
+
+      const pool = new pg.Pool({ connectionString: 'postgresql://localhost/test' });
+      const context = createUmzeptionPgContext(pool);
+
+      await pgInstallSchemaFromString(context, "CREATE TABLE foo (name TEXT DEFAULT 'a;b');");
+
+      const createStatements = queries.filter(q => typeof q === 'string' && q.startsWith('CREATE TABLE'));
+      assert.equal(createStatements.length, 1, 'should treat semicolons in strings as part of statement');
+      assert.ok(createStatements[0]?.includes("'a;b'"), 'string literal with semicolon should be preserved');
+
+      sinon.restore();
+    });
+
     it('should rollback and re-throw if a statement fails', async () => {
       const queryStub = sinon.stub().callsFake(async (sql) => {
         if (typeof sql === 'string' && sql.startsWith('CREATE TABLE')) {
