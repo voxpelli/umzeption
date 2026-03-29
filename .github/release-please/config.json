@@ -18,6 +18,7 @@
     { "type": "ci", "section": "🤖 Automation", "hidden": true }
   ],
   "packages": {
-    ".": {}
+    "packages/umzeption": {},
+    "packages/umzeption-pg": {}
   }
 }
