@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.0] (upcoming)
+## [1.0.0]
 
 ### ⚠ BREAKING CHANGES
 
@@ -27,11 +27,14 @@
 * `umzeption-pg`: new package for PostgreSQL support with module augmentation types
 * deterministic migration ordering: files are now sorted alphabetically (was platform-dependent)
 * tstyche type contract tests added
+* `uninstallSchema`: optional schema teardown function, used as `down` for install migrations
+* replace `globby` with native `fs.glob` (Node 22+) / `fs.readdir`-based fallback (Node 20)
 
 ### 🩹 Fixes
 
 * improved SQL splitting in schema-helper handles multi-line whitespace and comments
 * remove unused `_context` parameter from `resolveMigrations`
+* improved error messages include definition name, file path, and structured `cause` chains
 
 ## [0.4.1](https://github.com/voxpelli/umzeption/compare/v0.4.0...v0.4.1) (2024-12-01)
 
