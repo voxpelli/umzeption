@@ -65,7 +65,6 @@
   "dependencies": {
     "@voxpelli/type-helpers": "^4.1.0",
     "@voxpelli/typed-utils": "^4.2.0",
-    "globby": "^16.2.0",
     "plugin-importer": "^0.2.0"
   },
   "devDependencies": {
