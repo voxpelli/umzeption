@@ -93,25 +93,21 @@ function splitOnSemicolons (sql) {
 }
 
 /**
- * Split a SQL string into individual CREATE statements.
+ * Split a SQL string into individual statements.
  * Handles block comments, single-line comments, and semicolons in string literals.
+ * Supports all statement types (CREATE, ALTER, INSERT, GRANT, etc.).
  *
- * @param {string} createTablesString
+ * @param {string} sqlString
  * @returns {string[]}
  */
-function getTablesFromString (createTablesString) {
-  const cleaned = stripComments(createTablesString);
+function splitStatements (sqlString) {
+  const cleaned = stripComments(sqlString);
 
   // Split on semicolons outside of string literals
   const statements = splitOnSemicolons(cleaned);
 
   return statements
-    .map(statement => {
-      const trimmed = statement.trim();
-      if (!trimmed) return '';
-      // Ensure each statement starts with CREATE
-      return trimmed.startsWith('CREATE ') ? trimmed : 'CREATE ' + trimmed;
-    })
+    .map(statement => statement.trim())
     .filter(Boolean);
 }
 
@@ -121,11 +117,11 @@ function getTablesFromString (createTablesString) {
  * @returns {Promise<void>}
  */
 export async function pgInstallSchemaFromString (context, createTablesString) {
-  const tables = getTablesFromString(createTablesString);
+  const statements = splitStatements(createTablesString);
 
   await context.value.transact(async (/** @type {import('pg').PoolClient} */ client) => {
-    for (const table of tables) {
-      await client.query(table);
+    for (const statement of statements) {
+      await client.query(statement);
     }
   });
 }
