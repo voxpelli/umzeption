@@ -1,0 +1,13 @@
+name: Dependency Review
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    uses: voxpelli/ghatemplates/.github/workflows/dependency-review.yml@main

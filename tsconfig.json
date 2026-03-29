@@ -6,5 +6,11 @@
   "include": [
     "lib/**/*",
     "test/**/*",
-  ]
+  ],
+  "exclude": [
+    "typetests/**/*"
+  ],
+  "compilerOptions": {
+    "types": ["node"]
+  }
 }

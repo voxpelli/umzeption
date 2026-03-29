@@ -3,7 +3,8 @@
   "entry": [
     "index.js",
     "index.d.ts",
-    "lib/advanced-types.d.ts"
+    "lib/advanced-types.d.ts",
+    "typetests/**/*.tst.ts"
   ],
   "ignoreDependencies": ["@types/pg", "pg"]
 }
