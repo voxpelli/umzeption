@@ -58,5 +58,10 @@ export class BaseUmzeptionStorage {
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    await this.query(context, `
+      CREATE INDEX IF NOT EXISTS idx_${this.#tableName}_created_at
+      ON ${this.#tableName} (created_at)
+    `);
   }
 }
