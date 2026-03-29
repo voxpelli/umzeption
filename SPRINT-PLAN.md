@@ -234,6 +234,228 @@ After Phase 4 (monorepo):
 
 ---
 
+## Phase 6: Robustness & Edge Cases (Sprints 41-48)
+
+### Sprint 41: Configurable Migration Table Name
+- `packages/umzeption/lib/storage.js`: Add `tableName` constructor param (default `'umzeption_migrations'`), validate with `/^[a-z_][a-z0-9_]*$/i` to prevent injection, replace 4 hardcoded SQL refs
+- `packages/umzeption/lib/advanced-types.d.ts`: Update `UmzeptionStorage` constructor signature
+- `packages/umzeption-pg/lib/storage.js`: Forward `tableName` to `super()`
+- `packages/umzeption-pg/test/storage.spec.js`: Test custom + invalid table names
+
+### Sprint 42: Migration Name Validation
+- `packages/umzeption/lib/resolve-migrations.js`: Validate file names don't contain `|` or `:` (delimiters); detect duplicate IDs
+- `packages/umzeption/lib/definition.js`: Validate definition `name` excludes `|`/`:`
+- `packages/umzeption/test/dependencies.spec.js`: Test forbidden characters
+
+### Sprint 43: Handle Block Comments in SQL Splitting
+- `packages/umzeption-pg/lib/schema-helper.js`: Strip `/* */` block comments before splitting; handle semicolons in string literals
+- `packages/umzeption-pg/test/schema-helper.spec.js`: Tests for block comments, embedded semicolons
+
+### Sprint 44: Document readdirGlob Fallback Limitations
+- `packages/umzeption/lib/resolve-migrations.js`: Emit `process.emitWarning` if pattern contains `**` on Node 20
+- `packages/umzeption/README.md`: Add "Compatibility Notes" section
+
+### Sprint 45: ESM Import Validation for Migration Files
+- `packages/umzeption/lib/resolve-migrations.js`: Detect CJS-in-ESM errors (`ERR_REQUIRE_ESM`) and throw clear message
+- `packages/umzeption/test/fixtures/migrations-cjs/bad.cjs`: CJS fixture for testing
+
+### Sprint 46: Transaction Isolation Level Support
+- `packages/umzeption-pg/lib/utils.js`: Optional `{ isolationLevel }` param on `transact()`
+- `packages/umzeption-pg/lib/types.d.ts`: Add `TransactOptions` type
+- `packages/umzeption-pg/test/pg-utils.spec.js`: Test isolation levels
+
+### Sprint 47: Graceful Handling of Missing Migration Directories
+- `packages/umzeption/lib/resolve-migrations.js`: Emit warning when glob patterns match nothing (suppressible via `UMZEPTION_SUPPRESS_WARNINGS`)
+
+### Sprint 48: Add Index on created_at Column
+- `packages/umzeption/lib/storage.js`: Add `CREATE INDEX IF NOT EXISTS` after table creation
+- `packages/umzeption-pg/test/storage.spec.js`: Verify both queries emitted
+
+---
+
+## Phase 7: Developer Experience (Sprints 49-56)
+
+### Sprint 49: Export UmzeptionDefinition Type
+- `packages/umzeption/index.d.ts`: Add `UmzeptionDefinition` to exports
+- `packages/umzeption/typetests/main.tst.ts`: Type test for new export
+
+### Sprint 50: Shared Test Utilities
+- `packages/umzeption/test/helpers/make-context.js`: `createTestContext()` factory
+- `packages/umzeption-pg/test/helpers/make-pg-context.js`: `createTestPgContext()` factory
+- Update all test files to use shared helpers
+
+### Sprint 51: Migration Dry-Run / Pending Reporting
+- `packages/umzeption/lib/main.js`: New `umzeptionPending(config)` function
+- `packages/umzeption/index.js` + `index.d.ts`: Export it
+- `packages/umzeption/test/integration.spec.js`: Test pending detection
+- `packages/umzeption/README.md`: Document in API section
+
+### Sprint 52: Migration Execution Hooks
+- `packages/umzeption/lib/resolve-migrations.js`: Accept `hooks: { beforeMigration, afterMigration }` param
+- `packages/umzeption/lib/advanced-types.d.ts`: Add `UmzeptionHooks` interface
+- `packages/umzeption/lib/lookup.js`: Forward hooks; wrap install migrations too
+- `packages/umzeption/test/integration.spec.js`: Test hooks fire with correct args
+
+### Sprint 53: Pool Lifecycle / Shutdown Hook
+- `packages/umzeption-pg/lib/utils.js`: Add `destroy()` method calling `pool.end()`
+- `packages/umzeption-pg/lib/types.d.ts`: Add `destroy(): Promise<void>` to `FastifyPostgresStyleDb`
+- `packages/umzeption-pg/test/pg-utils.spec.js`: Test destroy
+
+### Sprint 54: Troubleshooting Documentation
+- `packages/umzeption/README.md`: Troubleshooting section (unsupported context, CJS errors, empty globs, install vs upgrade)
+- `packages/umzeption-pg/README.md`: PG-specific troubleshooting (pool, transactions, SQL splitting)
+
+### Sprint 55: Document No-CLI Design Decision
+- `packages/umzeption/README.md`: "Design Decisions" section with CLI entrypoint script example
+- `CONTRIBUTING.md`: "Design Principles" subsection
+
+### Sprint 56: Example Project
+- `examples/basic-pg/`: `migrate.js`, `package.json`, `migrations/001-create-users.js`, `migrations/002-add-email.js`, `README.md`
+- Root config: Ensure examples excluded from workspaces
+
+---
+
+## Phase 8: Advanced Features (Sprints 57-64)
+
+### Sprint 57: Advisory Lock for Concurrent Migration Safety
+- `packages/umzeption-pg/lib/advisory-lock.js`: New — `withAdvisoryLock(context, lockId, fn)` using `pg_advisory_lock`
+- `packages/umzeption-pg/index.js` + `index.d.ts`: Export it
+- `packages/umzeption-pg/test/storage.spec.js`: Test lock acquire/release
+
+### Sprint 58: Migration Timeout Support
+- `packages/umzeption/lib/resolve-migrations.js`: Wrap migrations in `Promise.race` with configurable timeout
+- `packages/umzeption/lib/advanced-types.d.ts`: Add `timeout?: number` to options
+- `packages/umzeption/test/integration.spec.js`: Test timeout rejection
+
+### Sprint 59: Rollback-to-Version Support
+- `packages/umzeption/lib/main.js`: New `umzeptionRollbackTarget(config, targetMigration)` utility
+- `packages/umzeption/index.js` + `index.d.ts`: Export it
+- `packages/umzeption/README.md`: Document rollback workflow
+
+### Sprint 60: Schema Versioning / Checksum
+- `packages/umzeption/lib/schema-version.js`: New — `computeSchemaChecksum(definitions)` using SHA-256
+- `packages/umzeption/index.js` + `index.d.ts`: Export it
+- `packages/umzeption/test/integration.spec.js`: Test checksum stability and sensitivity
+
+### Sprint 61: Structured Error Classes
+- `packages/umzeption/lib/errors.js`: New — `UmzeptionValidationError`, `UmzeptionMigrationImportError`, `UmzeptionUnsupportedContextError` with `.code` property
+- Update `resolve-migrations.js`, `definition.js`, `storage.js`, `schema-helper.js` to use them
+- `packages/umzeption/index.js` + `index.d.ts`: Export error classes
+
+### Sprint 62: Error Recovery Guidance
+- `packages/umzeption/README.md`: "Error Recovery" section (partial failures, idempotent installs, rollback)
+- `packages/umzeption-pg/README.md`: PG-specific recovery (transaction rollback, checking migration table)
+
+### Sprint 63: Observability Hooks Documentation
+- `packages/umzeption/README.md`: "Observability" section showing OpenTelemetry + structured logging via hooks (Sprint 52)
+- No new runtime deps — documentation + examples only
+
+### Sprint 64: Support Non-CREATE Statements in installSchemaFromString
+- `packages/umzeption-pg/lib/schema-helper.js`: Remove forced `CREATE` prefix; rename `getTablesFromString` to `splitStatements`
+- `packages/umzeption-pg/test/schema-helper.spec.js`: Tests for INSERT, ALTER, CREATE INDEX, GRANT, mixed DDL/DML
+
+---
+
+## Phase 9: Testing & Quality (Sprints 65-72)
+
+### Sprint 65: Expand JSDoc Coverage on Internal Functions
+- Add `@description` to all internal functions in: `resolve-migrations.js`, `dependencies.js`, `definition.js`, `storage.js`, `utils.js`, `schema-helper.js`
+
+### Sprint 66: Cross-Platform Path Handling Tests
+- `packages/umzeption/test/resolve-migrations.spec.js`: New — unit tests for `matchSimplePattern`, `readdirGlob`, deterministic sort, case-sensitive filenames
+
+### Sprint 67: Definition Validation Edge Case Tests
+- `packages/umzeption/test/definition.spec.js`: New — tests for empty glob, non-array glob, sync installSchema wrapping, invalid uninstallSchema, extra property passthrough
+
+### Sprint 68: Integration Test with Real PostgreSQL
+- `.github/workflows/nodejs.yml`: Add `postgres:16` service container (ubuntu-only)
+- `packages/umzeption-pg/test/real-pg.spec.js`: New — real DB tests (skipped if no PGHOST)
+- `CONTRIBUTING.md`: Document running real PG tests locally
+
+### Sprint 69: Test Coverage for lookup.js Edge Cases
+- `packages/umzeption/test/lookup.spec.js`: New — tests for meta+cwd error, default cwd, noop+install combo, empty deps, uninstallSchema in install mode
+
+### Sprint 70: Type Test Expansion for New APIs
+- `packages/umzeption/typetests/main.tst.ts`: Add tests for all new Phase 6-8 exports
+- `packages/umzeption-pg/typetests/main.tst.ts`: New — type tests for pg-specific additions
+- `packages/umzeption-pg/package.json`: Add `tstyche` + `check-type-tests` script
+
+### Sprint 71: Performance Benchmarks
+- `packages/umzeption/test/bench/resolve-migrations.bench.js`: Benchmark 100-file resolution
+- `packages/umzeption/test/bench/lookup.bench.js`: Benchmark full lookup with 5 deps × 20 migrations
+- `packages/umzeption/package.json`: Add `bench` script
+
+### Sprint 72: Validate release-please Configuration in CI
+- `packages/umzeption/test/release-config.spec.js`: Verify every `packages` key has a directory and every `packages/` dir is in config
+
+---
+
+## Phase 10: Ecosystem & Release (Sprints 73-80)
+
+### Sprint 73: Fix umzeption-pg README Badge Links
+- `packages/umzeption-pg/README.md`: Remove or conditionally show npm badges until published
+
+### Sprint 74: Review validate-conventional-commit Dependency
+- `packages/umzeption/package.json`: Remove if unused (husky hooks deleted); or document if used elsewhere
+
+### Sprint 75: Cross-Platform Clean Scripts
+- `packages/umzeption/package.json` + `packages/umzeption-pg/package.json`: Replace shell `find`+`rm` with `scripts/clean-declarations.js` using `readdir`+`unlink`
+
+### Sprint 76: Monitor plugin-importer for Breaking Changes
+- `renovate.json`: Add `dependencyDashboardApproval` for `plugin-importer` minor bumps
+- `packages/umzeption/test/dependencies.spec.js`: Contract test verifying expected API surface
+
+### Sprint 77: Hand-Authored types.d.ts Drift Detection
+- `packages/umzeption-pg/typetests/drift-check.tst.ts`: Verify runtime return types match declared types
+- `packages/umzeption/typetests/drift-check.tst.ts`: Same for core
+
+### Sprint 78: Decouple pg-integration Test Fixtures
+- `packages/umzeption-pg/test/fixtures/`: Create local fixture copies
+- `packages/umzeption-pg/test/pg-integration.spec.js`: Use local `./fixtures/` instead of `../../umzeption/test/fixtures/`
+
+### Sprint 79: Comprehensive Final Audit
+- Full `npm test` at root, `check:tsc`, `check:type-coverage` (99%+), `check:knip`
+- Verify CI passes on Node 20/22/24 + Linux/Windows
+- Review all new exports, READMEs, renovate rules
+
+### Sprint 80: Version Bump, Changelog, and Release
+- Bump versions: umzeption 1.1.0 (or 2.0.0 if Sprint 61/64 are breaking), umzeption-pg 1.0.0
+- Update CHANGELOGs with all Sprint 41-78 changes
+- Update `release-please/manifest.json`
+- Tag for release
+
+---
+
+## Sprint Dependency Graph (Phases 6-10)
+
+```
+Sprint 41 (table name) ──> Sprint 48 (index), Sprint 57 (advisory lock)
+Sprint 43 (block comments) ──> Sprint 64 (broader SQL)
+Sprint 50 (test helpers) ──> Sprints 66-69 (new test files)
+Sprint 52 (hooks) ──> Sprint 58 (timeout), Sprint 63 (observability)
+Sprint 53 (destroy) ──> Sprint 56 (examples show cleanup)
+Sprints 49,51,52,57,59,60,61 ──> Sprint 70 (type tests)
+Sprint 79 (audit) depends on all 41-78
+Sprint 80 (release) depends on Sprint 79
+Sprints 42,44,45,46,47,65 are independent
+```
+
+After each sprint:
+1. `npm test` passes at root level (both packages)
+2. `npm run check:tsc` passes (type checking)
+3. `npm run check:type-coverage` reports 99%+
+4. `npm run check:knip` reports no unused code/deps
+5. CI workflows pass on Node 20, 22, 24 (Linux + Windows)
+
+After Phase 10:
+6. All new APIs have type tests in `typetests/`
+7. All new features documented in README
+8. Both packages have consistent versioning
+9. Real PostgreSQL integration tests pass in CI
+10. No cross-package test fixture coupling remains
+
+---
+
 ## Research Sources
 
 This plan was informed by analysis of:
