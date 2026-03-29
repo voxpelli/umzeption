@@ -21,6 +21,9 @@ export function ensureUmzeptionDefinition (value) {
   if (!name) {
     throw new TypeError('Expected umzeption definition to have non-empty "name" property');
   }
+  if (/[|:]/.test(name)) {
+    throw new TypeError(`Invalid definition name "${name}": must not contain "|" or ":" (reserved delimiters)`);
+  }
   if (!pluginDir) {
     throw new TypeError(`Expected umzeption definition "${name}" to have non-empty "pluginDir" property`);
   }

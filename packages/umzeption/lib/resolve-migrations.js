@@ -93,9 +93,22 @@ export async function resolveMigrations (definition, noop = false) {
 
   const files = (await resolveGlob(glob, pluginDir)).sort();
 
+  /** @type {Set<string>} */
+  const seenIds = new Set();
+
   return Promise.all(files.map(async file => {
     const fileName = path.basename(file);
+
+    if (/[|:]/.test(fileName)) {
+      throw new TypeError(`Invalid migration file name "${fileName}": must not contain "|" or ":" (reserved delimiters)`);
+    }
+
     const migrationId = (noPrefix ? '' : definitionName + '|') + fileName;
+
+    if (seenIds.has(migrationId)) {
+      throw new TypeError(`Duplicate migration ID "${migrationId}" from "${file}"`);
+    }
+    seenIds.add(migrationId);
 
     /** @type {unknown} */
     const migration = await importAbsolutePath(file).catch(

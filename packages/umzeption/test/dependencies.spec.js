@@ -97,6 +97,17 @@ describe('Dependencies', () => {
       assert.notStrictEqual(result, input);
     });
 
+    it('should reject definition names containing reserved delimiters', () => {
+      assert.throws(
+        () => processDependency({ ...getBasicDependency(), name: 'foo|bar', pluginDir: 'x' }, context),
+        /must not contain "\|" or ":"/
+      );
+      assert.throws(
+        () => processDependency({ ...getBasicDependency(), name: 'foo:bar', pluginDir: 'x' }, context),
+        /must not contain "\|" or ":"/
+      );
+    });
+
     it('should leave additional properties on the definition but shallow clone it', () => {
       const input = {
         ...getBasicDependency(),
