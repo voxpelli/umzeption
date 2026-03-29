@@ -11,6 +11,10 @@
  * @returns {Promise<T>}
  */
 export async function withAdvisoryLock (context, lockId, fn) {
+  if (!Number.isSafeInteger(lockId)) {
+    throw new TypeError(`Invalid lockId: ${lockId}. Must be a safe integer.`);
+  }
+
   await context.value.query('SELECT pg_advisory_lock($1)', [String(lockId)]);
   try {
     return await fn();

@@ -9,9 +9,11 @@ const VALID_ISOLATION_LEVELS = new Set([
 ]);
 
 /**
+ * @template T
  * @this {FastifyPostgresStyleDb["pool"]}
- * @param {Parameters<FastifyPostgresStyleDb["transact"]>[0]} fn
+ * @param {(client: import('pg').PoolClient) => Promise<T>} fn
  * @param {{ isolationLevel?: string }} [options]
+ * @returns {Promise<T>}
  */
 async function transact (fn, options) {
   const client = await this.connect();
@@ -19,14 +21,16 @@ async function transact (fn, options) {
   try {
     let beginSql = 'BEGIN';
     if (options?.isolationLevel) {
-      if (!VALID_ISOLATION_LEVELS.has(options.isolationLevel.toUpperCase())) {
+      const normalized = options.isolationLevel.toUpperCase();
+      if (!VALID_ISOLATION_LEVELS.has(normalized)) {
         throw new TypeError(`Invalid isolation level: "${options.isolationLevel}"`);
       }
-      beginSql = `BEGIN TRANSACTION ISOLATION LEVEL ${options.isolationLevel.toUpperCase()}`;
+      beginSql = `BEGIN TRANSACTION ISOLATION LEVEL ${normalized}`;
     }
     await client.query(beginSql);
-    await fn(client);
+    const result = await fn(client);
     await client.query('COMMIT');
+    return result;
   } catch (cause) {
     try { await client.query('ROLLBACK'); } catch { /* ignore rollback errors */ }
     throw new Error('Transaction rolled back', { cause });
@@ -45,6 +49,6 @@ export function createFastifyPostgresStyleDb (pool) {
     destroy: () => pool.end(),
     pool,
     query: pool.query.bind(pool),
-    transact: transact.bind(pool),
+    transact: /** @type {FastifyPostgresStyleDb["transact"]} */ (transact.bind(pool)),
   };
 }

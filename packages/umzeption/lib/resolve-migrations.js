@@ -51,8 +51,8 @@ async function readdirGlob (patterns, cwd) {
           results.push(path.join(targetDir, entry));
         }
       }
-    } catch {
-      // Directory doesn't exist — skip silently
+    } catch (/** @type {any} */ err) {
+      if (err?.code !== 'ENOENT') throw err;
     }
   }
   return results;
@@ -97,13 +97,20 @@ async function resolveGlob (patterns, cwd) {
  * @param {string} label
  * @returns {Promise<T>}
  */
-function withTimeout (promise, ms, label) {
-  return Promise.race([
-    promise,
-    new Promise((_resolve, reject) => {
-      setTimeout(() => reject(new Error(`Migration "${label}" timed out after ${ms}ms`)), ms);
-    }),
-  ]);
+async function withTimeout (promise, ms, label) {
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  let timer;
+
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((_resolve, reject) => {
+        timer = setTimeout(() => reject(new Error(`Migration "${label}" timed out after ${ms}ms`)), ms);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /**
@@ -115,6 +122,10 @@ function withTimeout (promise, ms, label) {
  */
 export async function resolveMigrations (definition, noop = false, options) {
   const timeout = options?.timeout;
+
+  if (timeout !== undefined && (typeof timeout !== 'number' || !Number.isFinite(timeout) || timeout <= 0)) {
+    throw new TypeError(`Invalid timeout value: ${timeout}. Must be a positive finite number.`);
+  }
   const {
     glob,
     name: definitionName,

@@ -4,7 +4,7 @@
     "index.d.ts",
     "lib/pg-types.d.ts"
   ],
-  "ignore": ["coverage/**"],
+  "ignore": [],
   "ignoreBinaries": ["run-s", "run-p", "tsc", "installed-check", "knip", "eslint", "type-coverage", "c8"],
   "ignoreDependencies": ["npm-run-all2", "umzeption", "c8", "eslint", "installed-check", "type-coverage"]
 }

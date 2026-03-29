@@ -6,7 +6,7 @@ export interface FastifyPostgresStyleDb {
   query: Pool['query'];
   connect: Pool['connect'];
   destroy: () => Promise<void>;
-  transact: (fn: (client: PoolClient) => Promise<void>, options?: { isolationLevel?: string }) => Promise<void>;
+  transact: <T = void>(fn: (client: PoolClient) => Promise<T>, options?: { isolationLevel?: string }) => Promise<T>;
 }
 
 export type UmzeptionPgContext = UmzeptionContext<'pg', FastifyPostgresStyleDb>;

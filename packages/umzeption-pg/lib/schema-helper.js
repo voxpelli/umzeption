@@ -21,7 +21,7 @@ function stripComments (sql) {
       while (i < sql.length && !(sql[i] === '*' && sql[i + 1] === '/')) {
         i++;
       }
-      i += 2; // skip */
+      if (i < sql.length) i += 2; // skip */
       continue;
     }
     // Single-line comment: -- ...
@@ -34,7 +34,7 @@ function stripComments (sql) {
     }
     // String literal: '...' (with '' escape)
     if (sql[i] === "'") {
-      result += sql[i++] ?? '';
+      result += sql[i++];
       while (i < sql.length) {
         if (sql[i] === "'" && sql[i + 1] === "'") {
           result += "''";
@@ -44,12 +44,12 @@ function stripComments (sql) {
           i++;
           break;
         } else {
-          result += sql[i++] ?? '';
+          result += sql[i++];
         }
       }
       continue;
     }
-    result += sql[i++] ?? '';
+    result += sql[i++];
   }
 
   return result;
@@ -68,7 +68,7 @@ function splitOnSemicolons (sql) {
   let inString = false;
 
   for (let i = 0; i < sql.length; i++) {
-    const ch = sql[i] ?? '';
+    const ch = /** @type {string} */ (sql[i]);
     if (inString) {
       current += ch;
       if (ch === "'" && sql[i + 1] === "'") {
