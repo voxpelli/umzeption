@@ -4,6 +4,7 @@ export {
 
 export {
   umzeption,
+  umzeptionPending,
 } from './lib/main.js';
 
 export {
