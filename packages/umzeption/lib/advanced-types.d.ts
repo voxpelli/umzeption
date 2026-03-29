@@ -12,6 +12,7 @@ import type {
 export interface UmzeptionDependency<T extends AnyUmzeptionContext = AnyUmzeptionContext> extends PluginDefinition {
   glob: string[]
   installSchema: import('umzug').MigrationFn<T>
+  uninstallSchema?: import('umzug').MigrationFn<T>
 }
 
 // The fully resolved internal definition

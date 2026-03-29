@@ -57,6 +57,9 @@ export async function umzeptionLookup (options, context) {
       up: install
         ? async ({ context }) => definition.installSchema(({ name, context }))
         : async () => {},
+      down: (install && definition.uninstallSchema)
+        ? async ({ context }) => /** @type {import('umzug').MigrationFn<T>} */ (definition.uninstallSchema)(({ name, context }))
+        : async () => {},
     };
 
     return result;

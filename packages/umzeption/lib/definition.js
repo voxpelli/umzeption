@@ -31,7 +31,7 @@ export function ensureUmzeptionDefinition (value) {
     throw new TypeError(`Expected umzeption definition "${name}" to have an "installSchema" property`);
   }
 
-  const { glob, installSchema, ...extras } = umzeptionExtras;
+  const { glob, installSchema, uninstallSchema, ...extras } = umzeptionExtras;
 
   if (!isStringArray(glob)) {
     throw new TypeError(`Expected umzeption definition "${name}" "glob" property to be a string array`);
@@ -39,8 +39,11 @@ export function ensureUmzeptionDefinition (value) {
   if (typeof installSchema !== 'function') {
     throw new TypeError(`Expected umzeption definition "${name}" "installSchema" property to be a function`);
   }
+  if (uninstallSchema !== undefined && typeof uninstallSchema !== 'function') {
+    throw new TypeError(`Expected umzeption definition "${name}" "uninstallSchema" property to be a function`);
+  }
 
-  // Ensure that we have an async method here
+  // Ensure that we have async methods here
   /** @type {import('umzug').MigrationFn<import('./advanced-types.d.ts').AnyUmzeptionContext>} */
   const asyncInstallSchema = async (...args) => installSchema.call(value, ...args);
 
@@ -50,6 +53,7 @@ export function ensureUmzeptionDefinition (value) {
     pluginDir,
     glob,
     installSchema: asyncInstallSchema,
+    ...(uninstallSchema && { uninstallSchema: async (...args) => uninstallSchema.call(value, ...args) }),
     ...extras,
   };
 
