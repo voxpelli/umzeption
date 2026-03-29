@@ -4,17 +4,55 @@ import { registerSchemaInstaller } from 'umzeption';
 
 /**
  * Strip block comments and single-line comments from SQL,
- * preserving semicolons inside string literals.
+ * preserving string literals. Uses a state machine to avoid
+ * polynomial regex backtracking.
  *
  * @param {string} sql
  * @returns {string}
  */
 function stripComments (sql) {
-  // Match: block comments, single-line comments, or string literals (to skip them)
-  return sql.replaceAll(/\/\*[\s\S]*?\*\/|--[^\n]*|'(?:[^'\\]|\\.)*'/g, (match) => {
-    if (match.startsWith("'")) return match; // preserve string literals
-    return ''; // remove comments
-  });
+  let result = '';
+  let i = 0;
+
+  while (i < sql.length) {
+    // Block comment: /* ... */
+    if (sql[i] === '/' && sql[i + 1] === '*') {
+      i += 2;
+      while (i < sql.length && !(sql[i] === '*' && sql[i + 1] === '/')) {
+        i++;
+      }
+      i += 2; // skip */
+      continue;
+    }
+    // Single-line comment: -- ...
+    if (sql[i] === '-' && sql[i + 1] === '-') {
+      i += 2;
+      while (i < sql.length && sql[i] !== '\n') {
+        i++;
+      }
+      continue;
+    }
+    // String literal: '...' (with '' escape)
+    if (sql[i] === "'") {
+      result += sql[i++] ?? '';
+      while (i < sql.length) {
+        if (sql[i] === "'" && sql[i + 1] === "'") {
+          result += "''";
+          i += 2;
+        } else if (sql[i] === "'") {
+          result += "'";
+          i++;
+          break;
+        } else {
+          result += sql[i++] ?? '';
+        }
+      }
+      continue;
+    }
+    result += sql[i++] ?? '';
+  }
+
+  return result;
 }
 
 /**
