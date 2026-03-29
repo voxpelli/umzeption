@@ -1,17 +1,11 @@
 export type {
   AnyUmzeptionContext,
   DefineUmzeptionContexts,
-  FastifyPostgresStyleDb,
   UmzeptionContext,
   UmzeptionDependency,
   UmzeptionLookupOptions,
   UmzeptionStorage,
 } from './lib/advanced-types.d.ts';
-
-export {
-  createUmzeptionPgContext,
-  UmzeptionPgStorage,
-} from './lib/context-pg/main.js';
 
 export {
   createUmzeptionContext,
@@ -23,7 +17,7 @@ export {
 
 export {
   installSchemaFromString,
-  pgInstallSchemaFromString,
+  registerSchemaInstaller,
 } from './lib/schema-helper.js';
 
 export {

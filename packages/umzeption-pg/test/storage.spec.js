@@ -5,7 +5,8 @@ import sinon from 'sinon';
 
 import pg from 'pg';
 
-import { BaseUmzeptionStorage, UmzeptionPgStorage, createUmzeptionPgContext, createUmzeptionContext } from '../index.js';
+import { BaseUmzeptionStorage, createUmzeptionContext } from 'umzeption';
+import { UmzeptionPgStorage, createUmzeptionPgContext } from '../index.js';
 
 describe('BaseUmzeptionStorage', () => {
   it('should throw Unsupported context type from base query()', async () => {

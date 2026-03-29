@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 
 import sinon from 'sinon';
 
-import { installSchemaFromString, pgInstallSchemaFromString } from '../index.js';
-import { createUmzeptionPgContext } from '../index.js';
+import { installSchemaFromString, createUmzeptionContext } from 'umzeption';
+import { pgInstallSchemaFromString, createUmzeptionPgContext } from '../index.js';
 
 import pg from 'pg';
 
@@ -123,7 +123,6 @@ CREATE TABLE bar (name TEXT NOT NULL);
     });
 
     it('should throw for unsupported context types', async () => {
-      const { createUmzeptionContext } = await import('../index.js');
       const context = createUmzeptionContext('unknown', {});
 
       await assert.rejects(

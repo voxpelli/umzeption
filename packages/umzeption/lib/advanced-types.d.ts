@@ -1,5 +1,3 @@
-// @ts-ignore Ignoring to avoid strict dependency on 'pg'
-import type { Pool as PgPool, PoolClient as PgPoolClient } from 'pg';
 import type { PluginDefinition } from 'plugin-importer';
 import type { MigrationParams, UmzugStorage } from 'umzug';
 
@@ -53,8 +51,11 @@ interface UmzeptionContextExtras {
   value: unknown
 }
 
+/**
+ * Extensible context registry. Adapter packages (e.g. umzeption-pg) augment
+ * this interface via `declare module 'umzeption'` to add their context types.
+ */
 export interface DefineUmzeptionContexts {
-  pg: UmzeptionContext<'pg', FastifyPostgresStyleDb>,
   unknown: UmzeptionContext<'unknown', unknown>,
 }
 
@@ -65,17 +66,3 @@ export interface UmzeptionContext<T extends UmzeptionContextTypes, V>
   extends ValidDeclaration<T, DefineUmzeptionContexts, UmzeptionContextExtras> {
   value: V
 }
-
-// *** Postgres context **
-
-// TODO(Sprint 27): Extract pg context into a separate "umzeption-pg" package (see SPRINT-PLAN.md Phase 4)
-
-type FastifyPostgresStyleTransactCallback = (client: PgPoolClient) => void;
-type FastifyPostgresStyleTransact = (callback: FastifyPostgresStyleTransactCallback) => void;
-
-export type FastifyPostgresStyleDb = {
-  pool: PgPool;
-  query: PgPool['query'];
-  connect: PgPool['connect'];
-  transact: FastifyPostgresStyleTransact;
-};

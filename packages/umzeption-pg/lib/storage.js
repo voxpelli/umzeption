@@ -1,6 +1,6 @@
-import { BaseUmzeptionStorage } from '../storage.js';
+import { BaseUmzeptionStorage } from 'umzeption';
 
-/** @typedef {import('../advanced-types.js').DefineUmzeptionContexts['pg']} UmzeptionPgContext */
+/** @typedef {import('./types.d.ts').UmzeptionPgContext} UmzeptionPgContext */
 
 /** @augments {BaseUmzeptionStorage<UmzeptionPgContext>} */
 export class UmzeptionPgStorage extends BaseUmzeptionStorage {

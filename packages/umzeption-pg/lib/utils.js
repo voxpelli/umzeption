@@ -1,4 +1,4 @@
-/** @typedef {import('../advanced-types.js').FastifyPostgresStyleDb} FastifyPostgresStyleDb */
+/** @typedef {import('./types.d.ts').FastifyPostgresStyleDb} FastifyPostgresStyleDb */
 
 /**
  * @this {FastifyPostgresStyleDb["pool"]}
