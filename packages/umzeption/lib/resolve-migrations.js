@@ -83,30 +83,38 @@ export async function resolveMigrations (definition, noop = false) {
   const files = (await resolveGlob(glob, pluginDir)).sort();
 
   return Promise.all(files.map(async file => {
+    const fileName = path.basename(file);
+    const migrationId = (noPrefix ? '' : definitionName + '|') + fileName;
+
     /** @type {unknown} */
-    const migration = await importAbsolutePath(file);
+    const migration = await importAbsolutePath(file).catch(
+      /** @param {unknown} cause */
+      cause => {
+        throw new Error(`Failed to import migration "${migrationId}" from "${file}"`, { cause });
+      }
+    );
 
     if (!migration || typeof migration !== 'object') {
-      throw new TypeError('Invalid migration, expected an object');
+      throw new TypeError(`Invalid migration "${migrationId}": expected an object, got ${migration === null ? 'null' : typeof migration}`);
     }
 
     if (!('down' in migration)) {
-      throw new TypeError('Invalid migration, expected an "down" property');
+      throw new TypeError(`Invalid migration "${migrationId}": missing "down" export`);
     }
     if (!('up' in migration)) {
-      throw new TypeError('Invalid migration, expected an "up" property');
+      throw new TypeError(`Invalid migration "${migrationId}": missing "up" export`);
     }
 
     const { down, up } = migration;
 
     if (typeof down !== 'function') {
-      throw new TypeError('Invalid migration, expected a "down" method');
+      throw new TypeError(`Invalid migration "${migrationId}": "down" export must be a function, got ${typeof down}`);
     }
     if (typeof up !== 'function') {
-      throw new TypeError('Invalid migration, expected a "up" method');
+      throw new TypeError(`Invalid migration "${migrationId}": "up" export must be a function, got ${typeof up}`);
     }
 
-    const name = (noPrefix ? '' : definitionName + '|') + path.basename(file);
+    const name = migrationId;
 
     /** @type {import('umzug').RunnableMigration<T>} */
     const result = {
@@ -126,7 +134,7 @@ export async function resolveMigrations (definition, noop = false) {
     .catch(
       /** @param {unknown} cause */
       cause => {
-        throw new Error('Failed to resolve migrations', { cause });
+        throw new Error(`Failed to resolve migrations for definition "${definitionName}"`, { cause });
       }
     );
 }
