@@ -73,7 +73,7 @@
     "sinon": "^19.0.2",
     "type-coverage": "^2.29.7",
     "typescript": "~5.9.3",
-    "umzeption": "workspace:*",
+    "umzeption": "*",
     "umzug": "^3.8.2"
   }
 }
