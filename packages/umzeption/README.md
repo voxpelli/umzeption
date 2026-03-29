@@ -9,128 +9,202 @@ A recursive [Umzug](https://github.com/sequelize/umzug) extension with migration
 [![Types in JS](https://img.shields.io/badge/types_in_js-yes-brightgreen)](https://github.com/voxpelli/types-in-js)
 [![Follow @voxpelli@mastodon.social](https://img.shields.io/mastodon/follow/109247025527949675?domain=https%3A%2F%2Fmastodon.social&style=social)](https://mastodon.social/@voxpelli)
 
+## Overview
+
+Umzeption adds two things on top of [Umzug](https://github.com/sequelize/umzug):
+
+1. **Dependency-aware migration loading** — recursively resolve and topologically sort migrations from npm packages that declare `umzeptionConfig`
+2. **Install vs upgrade mode** — on first install run `installSchema()` (idempotent SQL) and skip file migrations; on upgrades run file migrations normally
+
+### Architecture
+
+```
+umzeption({ install, dependencies, glob, installSchema })
+    │
+    ├─ loadDependencies()          ← resolves npm packages via plugin-importer
+    │   └─ topological sort        ← respects inter-dependency declarations
+    │
+    ├─ [for each dependency + main]
+    │   ├─ synthetic install migration
+    │   │   up:   installSchema()  ← schema setup (install mode only)
+    │   │   down: uninstallSchema() ← schema teardown (if provided)
+    │   └─ resolveMigrations()     ← globs files, sorts alphabetically
+    │       up/down: module exports
+    │
+    └─ returns RunnableMigration[] for Umzug
+```
+
+**Install mode** (`install: true`): `installSchema` runs; file migrations are marked done without running.
+
+**Upgrade mode** (`install: false`): `installSchema` is skipped; new file migrations run normally via Umzug.
+
+## Install
+
+```sh
+npm install umzeption umzug
+# For PostgreSQL support:
+npm install umzeption-pg pg
+```
+
 ## Usage
 
 ```javascript
 import pg from 'pg';
+import { umzeption } from 'umzeption';
 import {
   UmzeptionPgStorage,
   createUmzeptionPgContext,
-  umzeption,
-} from 'umzeption';
+} from 'umzeption-pg';
 import { Umzug } from 'umzug';
 
 const umzug = new Umzug({
   migrations: umzeption({
-    // Which dependencies we want to install migrations and schemas from
+    // Which dependencies to load migrations and schemas from
     dependencies: [
       '@yikesable/foo',
       '@yikesable/bar',
     ],
-    // Optional: Which migrations do we have ourselves?
+    // Optional: your own migrations
     glob: ['migrations/*.js'],
-    // Optional: Which migrations do we have ourselves?
-    async installSchema ({ context: queryInterface }) {},
-    // Optional: Set to true if it should be a fresh install rather than a migration
-    install: true,
-    // Optional: Used to inform where to resolve "glob" from
+    // Optional: your own schema setup (runs in install mode)
+    async installSchema ({ context }) {
+      await context.value.transact(async client => {
+        await client.query('CREATE TABLE IF NOT EXISTS my_table (id serial PRIMARY KEY)');
+      });
+    },
+    // Optional: set true for first install; false (default) for upgrades
+    install: false,
+    // Optional: resolve paths relative to this file
     meta: import.meta,
-    // Optional: Can be used instead of "meta" and if none are set, then process.cwd() is the default
-    // cwd: process.cwd(),
   }),
-  // Other contexts can be created and plugins can support multiple contexts
   context: createUmzeptionPgContext(new pg.Pool({
     allowExitOnIdle: true,
-    connectionString: '...',
+    connectionString: process.env.DATABASE_URL,
   })),
-  // Any type of storage can be used, but UmzeptionStorage  ones re-use the context's connection + ensures a match with the context types
   storage: new UmzeptionPgStorage(),
   logger: console,
 });
 
-umzug.up();
+await umzug.up();
 ```
 
 ## Concept
 
 ### First install
 
-On the first install in an environment you set `install: true` in `umzeption()`. This makes it so that the `installSchema()` methods will be what is run and all migrations will be marked as being run without actually running (as a fresh install should need no migrations).
+Set `install: true`. The `installSchema()` of each dependency (and your own) runs once to set up the full schema. All file migrations are recorded as already applied — they are not run, because the schema is already up to date.
 
 ### Subsequent upgrades
 
-On everything but the first install you set `install: false` in `umzeption()` (or leave it out). This makes it so that the `installSchema()` methods not be run, but all new migrations will be run as normal through Umzug.
+Set `install: false` (or omit). `installSchema()` is skipped. Umzug runs any new file migrations that have not been applied yet.
 
-## How to make an Umzeption dependency
+### Dependency ordering
 
-The dependency is expected to provide one of these two at its top level
+Dependencies are resolved recursively from npm packages and sorted topologically. If `@yikesable/foo` declares `dependencies: ['@yikesable/base']`, `base` will be installed and migrated first automatically.
 
-### Through `umzeptionConfig` property
+## Making an Umzeption dependency
 
-Makes it easy to enforce types and keeps all Umzeption related stuff grouped together
+### Via `umzeptionConfig` export (recommended)
 
 ```javascript
 /** @satisfies {import('umzeption').UmzeptionDependency} */
 export const umzeptionConfig = {
+  // Other umzeption packages this one depends on
   dependencies: ['@yikesable/abc'],
+  // Migration files to run on upgrade
   glob: ['migrations/*.js'],
+  // Full schema setup for fresh install
   async installSchema ({ context }) {
     if (context.type !== 'pg') {
       throw new Error(`Unsupported context type: ${context.type}`);
     }
-
-    const tables = await getTables();
-
     await context.value.transact(async client => {
-      for (const table of tables) {
-        await client.query(table);
-      }
+      await client.query(`
+        CREATE TABLE my_table (id serial PRIMARY KEY, name text NOT NULL)
+      `);
     });
+  },
+  // Optional: tear down schema (used as "down" for the install migration)
+  async uninstallSchema ({ context }) {
+    if (context.type !== 'pg') return;
+    await context.value.query('DROP TABLE IF EXISTS my_table');
   },
 };
 ```
 
-### Through top level exports
+### Via top-level exports
 
 ```javascript
 export const dependencies = ['@yikesable/abc'];
 export const glob = ['migrations/*.js'];
+
 /** @type {import('umzeption').UmzeptionDependency["installSchema"]} */
 export async function installSchema ({ context }) {
-    if (context.type !== 'pg') {
-      throw new Error(`Unsupported context type: ${context.type}`);
-    }
-
-    const tables = await getTables();
-
-    await context.value.transact(async client => {
-      for (const table of tables) {
-        await client.query(table);
-      }
-    });
-  },
-};
+  // ...
+}
 ```
 
-### Using `installSchemaFromString` helper
+### Using `installSchemaFromString` with a SQL file
 
 ```javascript
 import { readFile } from 'node:fs/promises';
-
 import { installSchemaFromString } from 'umzeption';
 
 /** @satisfies {import('umzeption').UmzeptionDependency} */
 export const umzeptionConfig = {
-  dependencies: ['@yikesable/abc'],
   glob: ['migrations/*.js'],
   installSchema: async ({ context }) => {
-    const tables = await readFile(new URL('create-tables.sql', import.meta.url), 'utf8');
-    return installSchemaFromString(context, tables);
+    const sql = await readFile(new URL('schema.sql', import.meta.url), 'utf8');
+    return installSchemaFromString(context, sql);
   },
 };
 ```
 
+> **Note:** `installSchemaFromString` requires an adapter package (e.g. `umzeption-pg`) to be imported so that a schema installer is registered for the context type. Calling it without an adapter throws.
+
+### Migration file format
+
+Each file in `glob` must export `up` and `down` functions:
+
+```javascript
+/** @type {import('umzug').MigrationFn<import('umzeption').AnyUmzeptionContext>} */
+export async function up ({ context }) {
+  await context.value.query('ALTER TABLE my_table ADD COLUMN email text');
+}
+
+/** @type {import('umzug').MigrationFn<import('umzeption').AnyUmzeptionContext>} */
+export async function down ({ context }) {
+  await context.value.query('ALTER TABLE my_table DROP COLUMN email');
+}
+```
+
+## API
+
+### `umzeption(options)`
+
+Returns a [migrations resolver](https://github.com/sequelize/umzug#custom-resolver) for use with `new Umzug({ migrations: ... })`.
+
+| Option | Type | Description |
+|---|---|---|
+| `dependencies` | `string[]` | npm package names to load as umzeption dependencies |
+| `glob` | `string[]` | Glob patterns for your own migration files (relative to `cwd`/`meta`) |
+| `installSchema` | `MigrationFn` | Schema setup function, called only in install mode |
+| `uninstallSchema` | `MigrationFn` | Optional schema teardown, used as `down` for the install migration |
+| `install` | `boolean` | `true` = install mode, `false` = upgrade mode (default: `false`) |
+| `meta` | `ImportMeta` | Used to resolve `glob` paths relative to the calling file |
+| `cwd` | `string` | Alternative to `meta`; defaults to `process.cwd()` |
+| `noop` | `boolean` | If `true`, all migrations are no-ops (useful for testing) |
+
+### `installSchemaFromString(context, sql)`
+
+Runs a SQL string through the registered adapter for the given context type. Requires the appropriate adapter package to have been imported.
+
+### `registerSchemaInstaller(contextType, installer)`
+
+Registers a schema installer for a context type. Called automatically by adapter packages on import.
+
 ## See also
 
-* [`umzug`](https://github.com/sequelize/umzug) – the base system this module is meant to be paired with
-* [`plugin-importer`](https://github.com/voxpelli/plugin-importer) – the plugin loader that this module uses
+* [`umzeption-pg`](https://www.npmjs.com/package/umzeption-pg) – PostgreSQL adapter for umzeption
+* [`umzug`](https://github.com/sequelize/umzug) – the base migration system this module extends
+* [`plugin-importer`](https://github.com/voxpelli/plugin-importer) – the plugin loader used for dependency resolution
