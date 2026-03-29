@@ -11,10 +11,10 @@
  * @returns {Promise<T>}
  */
 export async function withAdvisoryLock (context, lockId, fn) {
-  await context.value.query(`SELECT pg_advisory_lock($1)`, [String(lockId)]);
+  await context.value.query('SELECT pg_advisory_lock($1)', [String(lockId)]);
   try {
     return await fn();
   } finally {
-    await context.value.query(`SELECT pg_advisory_unlock($1)`, [String(lockId)]);
+    await context.value.query('SELECT pg_advisory_unlock($1)', [String(lockId)]);
   }
 }
