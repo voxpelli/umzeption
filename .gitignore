@@ -1,5 +1,5 @@
 # Basic ones
-/coverage
+coverage/
 /coverage-ts
 /node_modules
 /.env
@@ -16,6 +16,5 @@
 !/index.d.ts
 !/packages/*/index.d.ts
 !/packages/*/lib/**/*-types.d.ts
-!/packages/umzeption-pg/lib/types.d.ts
 
 # Library specific ones
