@@ -31,7 +31,7 @@ export function ensureUmzeptionDefinition (value) {
     throw new TypeError(`Expected umzeption definition "${name}" to have an "installSchema" property`);
   }
 
-  const { glob, installSchema, uninstallSchema, ...extras } = umzeptionExtras;
+  const { glob, installSchema, uninstallSchema, ...extras } = /** @type {{ glob: unknown, installSchema: unknown, uninstallSchema?: unknown }} */ (umzeptionExtras);
 
   if (!isStringArray(glob)) {
     throw new TypeError(`Expected umzeption definition "${name}" "glob" property to be a string array`);

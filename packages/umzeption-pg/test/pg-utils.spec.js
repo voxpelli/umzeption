@@ -29,8 +29,9 @@ describe('pg-utils: createFastifyPostgresStyleDb (via createUmzeptionPgContext)'
 
   describe('transact', () => {
     it('should BEGIN and COMMIT on success', async () => {
+      /** @type {string[]} */
       const queries = [];
-      const clientQuery = sinon.stub().callsFake(async (sql) => {
+      const clientQuery = sinon.stub().callsFake(async (/** @type {string} */ sql) => {
         queries.push(sql);
         return { rows: [] };
       });
@@ -44,7 +45,7 @@ describe('pg-utils: createFastifyPostgresStyleDb (via createUmzeptionPgContext)'
       const pool = new pg.Pool({ connectionString: 'postgresql://localhost/test' });
       const context = createUmzeptionPgContext(pool);
 
-      await context.value.transact(async client => {
+      await context.value.transact(async (/** @type {import('pg').PoolClient} */ client) => {
         await client.query('SELECT 1');
       });
 
@@ -53,8 +54,9 @@ describe('pg-utils: createFastifyPostgresStyleDb (via createUmzeptionPgContext)'
     });
 
     it('should ROLLBACK and throw on failure', async () => {
+      /** @type {string[]} */
       const queries = [];
-      const clientQuery = sinon.stub().callsFake(async (sql) => {
+      const clientQuery = sinon.stub().callsFake(async (/** @type {string} */ sql) => {
         queries.push(sql);
         if (sql === 'FAIL') throw new Error('query failed');
         return { rows: [] };
@@ -70,7 +72,7 @@ describe('pg-utils: createFastifyPostgresStyleDb (via createUmzeptionPgContext)'
       const context = createUmzeptionPgContext(pool);
 
       await assert.rejects(
-        () => context.value.transact(async client => {
+        () => context.value.transact(async (/** @type {import('pg').PoolClient} */ client) => {
           await client.query('FAIL');
         }),
         /Transaction rolled back/

@@ -1,7 +1,7 @@
 import { createUmzeptionContext } from 'umzeption';
 import { createFastifyPostgresStyleDb } from './utils.js';
 
-/** @typedef {import('./types.d.ts').FastifyPostgresStyleDb} FastifyPostgresStyleDb */
+/** @typedef {import('./pg-types.d.ts').FastifyPostgresStyleDb} FastifyPostgresStyleDb */
 
 /**
  * @param {FastifyPostgresStyleDb["pool"]} pool

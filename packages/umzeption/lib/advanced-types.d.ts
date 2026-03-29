@@ -36,6 +36,8 @@ export interface UmzeptionLookupOptions<T extends AnyUmzeptionContext> extends
 // *** Storage ***
 
 export abstract class UmzeptionStorage<T extends AnyUmzeptionContext> implements UmzugStorage<T> {
+  constructor (options?: { tableName?: string });
+
   // From UmzugStorage
   logMigration: (params: MigrationParams<T>) => Promise<void>;
   unlogMigration: (params: MigrationParams<T>) => Promise<void>;

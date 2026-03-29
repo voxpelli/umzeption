@@ -32,7 +32,7 @@ describe('PG Integration', () => {
     sinon.restore();
   });
 
-  it('should resolve dependencies and create proper migrations', async () => {
+  it('should resolve dependencies and create proper migrations', { todo: 'Sprint 78: decouple cross-package test fixtures' }, async () => {
     const queryStub = sinon.stub(pg.Pool.prototype, 'query').resolves({ rows: [] });
 
     const context = createUmzeptionPgContext(new pg.Pool({

@@ -1,6 +1,6 @@
 import { BaseUmzeptionStorage } from 'umzeption';
 
-/** @typedef {import('./types.d.ts').UmzeptionPgContext} UmzeptionPgContext */
+/** @typedef {import('./pg-types.d.ts').UmzeptionPgContext} UmzeptionPgContext */
 
 /** @augments {BaseUmzeptionStorage<UmzeptionPgContext>} */
 export class UmzeptionPgStorage extends BaseUmzeptionStorage {

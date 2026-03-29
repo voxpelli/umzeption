@@ -12,7 +12,7 @@ describe('schema-helper', () => {
   describe('pgInstallSchemaFromString', () => {
     it('should execute a single CREATE TABLE statement', async () => {
       const queryStub = sinon.stub(pg.Pool.prototype, 'query').resolves({ rows: [] });
-      const connectStub = sinon.stub(pg.Pool.prototype, 'connect').resolves({
+      sinon.stub(pg.Pool.prototype, 'connect').resolves({
         query: queryStub,
         release: sinon.stub(),
       });
@@ -28,12 +28,13 @@ describe('schema-helper', () => {
     });
 
     it('should execute multiple CREATE TABLE statements', async () => {
+      /** @type {string[]} */
       const queries = [];
-      const queryStub = sinon.stub().callsFake(async (sql) => {
+      const queryStub = sinon.stub().callsFake(async (/** @type {string} */ sql) => {
         queries.push(sql);
         return { rows: [] };
       });
-      const connectStub = sinon.stub(pg.Pool.prototype, 'connect').resolves({
+      sinon.stub(pg.Pool.prototype, 'connect').resolves({
         query: queryStub,
         release: sinon.stub(),
       });
@@ -54,8 +55,9 @@ CREATE TABLE bar (id SERIAL PRIMARY KEY);
     });
 
     it('should handle SQL with single-line comments between statements', async () => {
+      /** @type {string[]} */
       const queries = [];
-      const queryStub = sinon.stub().callsFake(async (sql) => {
+      const queryStub = sinon.stub().callsFake(async (/** @type {string} */ sql) => {
         queries.push(sql);
         return { rows: [] };
       });
@@ -116,7 +118,7 @@ CREATE TABLE bar (name TEXT NOT NULL);
       const context = createUmzeptionPgContext(pool);
 
       await assert.doesNotReject(
-        () => installSchemaFromString(context, 'CREATE TABLE foo (id SERIAL PRIMARY KEY);')
+        () => installSchemaFromString(/** @type {import('umzeption').AnyUmzeptionContext} */ (/** @type {unknown} */ (context)), 'CREATE TABLE foo (id SERIAL PRIMARY KEY);')
       );
 
       sinon.restore();

@@ -9,8 +9,8 @@ let fsGlob;
 try {
   // fs.glob is available in Node 22+, not in Node 20
   const fs = await import('node:fs/promises');
-  if (typeof fs.glob === 'function') {
-    fsGlob = fs.glob;
+  if ('glob' in fs && typeof fs.glob === 'function') {
+    fsGlob = /** @type {typeof fsGlob} */ (fs.glob);
   }
 } catch {
   // fs.glob unavailable — will use readdirGlob fallback
@@ -41,8 +41,8 @@ async function readdirGlob (patterns, cwd) {
   const results = [];
   for (const pattern of patterns) {
     const lastSlash = pattern.lastIndexOf('/');
-    const subdir = lastSlash >= 0 ? pattern.slice(0, lastSlash) : '.';
-    const filePattern = lastSlash >= 0 ? pattern.slice(lastSlash + 1) : pattern;
+    const subdir = lastSlash !== -1 ? pattern.slice(0, lastSlash) : '.';
+    const filePattern = lastSlash !== -1 ? pattern.slice(lastSlash + 1) : pattern;
     const targetDir = path.join(cwd, subdir);
     try {
       const entries = await readdir(targetDir);

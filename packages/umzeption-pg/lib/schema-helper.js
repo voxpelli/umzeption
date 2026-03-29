@@ -1,6 +1,6 @@
 import { registerSchemaInstaller } from 'umzeption';
 
-/** @typedef {import('./types.d.ts').UmzeptionPgContext} UmzeptionPgContext */
+/** @typedef {import('./pg-types.d.ts').UmzeptionPgContext} UmzeptionPgContext */
 
 /**
  * Split a SQL string into individual CREATE statements.
@@ -38,7 +38,7 @@ function getTablesFromString (createTablesString) {
 export async function pgInstallSchemaFromString (context, createTablesString) {
   const tables = getTablesFromString(createTablesString);
 
-  await context.value.transact(async client => {
+  await context.value.transact(async (/** @type {import('pg').PoolClient} */ client) => {
     for (const table of tables) {
       await client.query(table);
     }

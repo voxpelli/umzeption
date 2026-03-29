@@ -56,7 +56,6 @@
     "umzug": "^3.8.1"
   },
   "dependencies": {
-    "@voxpelli/type-helpers": "^4.1.0",
     "pg": "^8.11.2"
   },
   "devDependencies": {

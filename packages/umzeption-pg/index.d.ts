@@ -1,7 +1,7 @@
 export type {
   FastifyPostgresStyleDb,
   UmzeptionPgContext,
-} from './lib/types.d.ts';
+} from './lib/pg-types.d.ts';
 
 export {
   createUmzeptionPgContext,

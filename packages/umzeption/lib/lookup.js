@@ -7,10 +7,10 @@ import { resolveMigrations } from './resolve-migrations.js';
 /**
  * @template {import('./advanced-types.d.ts').AnyUmzeptionContext} T
  * @param {import('./advanced-types.d.ts').UmzeptionLookupOptions<T>} options
- * @param {T} context
+ * @param {T} _context
  * @returns {Promise<Array<import('umzug').RunnableMigration<T>>>}
  */
-export async function umzeptionLookup (options, context) {
+export async function umzeptionLookup (options, _context) {
   const {
     cwd: rawCwd,
     dependencies,
