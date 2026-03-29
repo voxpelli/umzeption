@@ -1,4 +1,4 @@
-// TODO: Extract pg context into a "umzeption-pg" module
+// TODO(Sprint 27): Extract pg context into a separate "umzeption-pg" package (see SPRINT-PLAN.md Phase 4)
 export {
   createUmzeptionPgContext,
   UmzeptionPgStorage,
