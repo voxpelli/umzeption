@@ -38,6 +38,7 @@ function matchSimplePattern (pattern, name) {
  * @returns {Promise<string[]>}
  */
 async function readdirGlob (patterns, cwd) {
+  /** @type {string[]} */
   const results = [];
   for (const pattern of patterns) {
     const lastSlash = pattern.lastIndexOf('/');
@@ -51,8 +52,9 @@ async function readdirGlob (patterns, cwd) {
           results.push(path.join(targetDir, entry));
         }
       }
-    } catch (/** @type {any} */ err) {
-      if (err?.code !== 'ENOENT') throw err;
+    } catch (err) {
+      if (err instanceof Error && 'code' in err && /** @type {{ code: string }} */ (err).code === 'ENOENT') continue;
+      throw err;
     }
   }
   return results;
@@ -65,6 +67,7 @@ async function readdirGlob (patterns, cwd) {
  */
 async function resolveGlob (patterns, cwd) {
   if (fsGlob) {
+    /** @type {string[]} */
     const files = [];
     for (const pattern of patterns) {
       // fs.glob returns paths relative to cwd; resolve to absolute

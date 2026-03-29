@@ -9,6 +9,7 @@ export class UmzeptionError extends Error {
    */
   constructor (message, code, options) {
     super(message, options);
+    /** @type {string} */
     this.name = 'UmzeptionError';
     this.code = code;
   }
