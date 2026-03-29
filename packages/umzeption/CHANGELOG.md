@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.0.0] (upcoming)
+
+### ⚠ BREAKING CHANGES
+
+* **Node 18 dropped**: minimum Node.js version is now `^20.19.0 || ^22.13.0 || >=24`
+* **PG context extracted**: `createUmzeptionPgContext`, `UmzeptionPgStorage`, and
+  `pgInstallSchemaFromString` are no longer exported from `umzeption`. Install the
+  new `umzeption-pg` package and import from there instead:
+  ```js
+  // Before
+  import { createUmzeptionPgContext, UmzeptionPgStorage } from 'umzeption';
+  // After
+  import { createUmzeptionPgContext, UmzeptionPgStorage } from 'umzeption-pg';
+  ```
+* **`installSchemaFromString` is now plugin-based**: context adapters must
+  register their handler via `registerSchemaInstaller` (done automatically when
+  importing from `umzeption-pg`). Calling `installSchemaFromString` without
+  importing the appropriate adapter package will throw.
+* **`FastifyPostgresStyleDb` moved**: this type is now exported from `umzeption-pg`.
+
+### 🌟 Features
+
+* monorepo: repository restructured as npm workspaces
+* `registerSchemaInstaller`: new export for registering context-specific schema installers
+* `umzeption-pg`: new package for PostgreSQL support with module augmentation types
+* deterministic migration ordering: files are now sorted alphabetically (was platform-dependent)
+* tstyche type contract tests added
+
+### 🩹 Fixes
+
+* improved SQL splitting in schema-helper handles multi-line whitespace and comments
+* remove unused `_context` parameter from `resolveMigrations`
+
 ## [0.4.1](https://github.com/voxpelli/umzeption/compare/v0.4.0...v0.4.1) (2024-12-01)
 
 
