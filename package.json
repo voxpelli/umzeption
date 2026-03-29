@@ -5,9 +5,10 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces",
-    "check": "npm run check --workspaces",
-    "test": "npm run test --workspaces",
-    "test-ci": "npm run test-ci --workspaces",
+    "check": "npm run check --workspaces --if-present",
+    "check:lint": "npm run check:lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test-ci": "npm run test-ci --workspaces --if-present",
     "husky-enable": "husky",
     "husky-disable": "git config --unset core.hooksPath"
   },
