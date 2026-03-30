@@ -1,0 +1,5 @@
+{
+  "testFileMatch": ["typetests/**/*.tst.ts"],
+  "rejectAnyType": true,
+  "rejectNeverType": true
+}

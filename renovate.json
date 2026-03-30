@@ -1,5 +1,12 @@
 {
   "extends": [
     "github>voxpelli/renovate-config"
+  ],
+  "packageRules": [
+    {
+      "description": "Ignore workspace-internal cross-package references",
+      "matchPackageNames": ["umzeption", "umzeption-pg"],
+      "enabled": false
+    }
   ]
 }

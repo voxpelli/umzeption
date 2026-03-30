@@ -1,0 +1,11 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "index.d.ts",
+    "lib/advanced-types.d.ts",
+    "typetests/**/*.tst.ts"
+  ],
+  "ignore": ["coverage/**"],
+  "ignoreBinaries": ["run-s", "run-p", "tsc", "tstyche", "installed-check", "knip", "eslint", "type-coverage", "c8"],
+  "ignoreDependencies": ["npm-run-all2", "validate-conventional-commit", "c8", "eslint", "installed-check", "type-coverage"]
+}

@@ -1,5 +1,5 @@
 # Basic ones
-/coverage
+coverage/
 /coverage-ts
 /node_modules
 /.env
@@ -14,5 +14,7 @@
 *.d.ts.map
 !/lib/**/*-types.d.ts
 !/index.d.ts
+!/packages/*/index.d.ts
+!/packages/*/lib/**/*-types.d.ts
 
 # Library specific ones
