@@ -54,7 +54,7 @@ Creates an umzeption context wrapping a `pg.Pool`. The context has `type: 'pg'` 
 
 ### `UmzeptionPgStorage`
 
-An `UmzugStorage` implementation that stores migration state in a PostgreSQL table (`umzug_migrations` by default) using the pg context connection. Automatically creates the table if it does not exist.
+An `UmzugStorage` implementation that stores migration state in a PostgreSQL table (`umzeption_migrations` by default, configurable via the `tableName` option) using the pg context connection. Automatically creates the table if it does not exist.
 
 ### `pgInstallSchemaFromString(context, sql)`
 

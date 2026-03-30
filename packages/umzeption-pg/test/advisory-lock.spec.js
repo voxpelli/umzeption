@@ -7,18 +7,40 @@ import pg from 'pg';
 
 import { createUmzeptionPgContext, withAdvisoryLock } from '../index.js';
 
+/**
+ * Create a stubbed client that records queries.
+ *
+ * @param {{ queries?: string[], params?: unknown[][] }} [options]
+ * @returns {{ queries: string[], params: unknown[][], clientQuery: sinon.SinonStub, clientRelease: sinon.SinonStub }}
+ */
+function makeClient (options) {
+  /** @type {string[]} */
+  const queries = options?.queries ?? [];
+  /** @type {unknown[][]} */
+  const params = options?.params ?? [];
+
+  const clientQuery = sinon.stub().callsFake(async (/** @type {string} */ sql, /** @type {unknown[]} */ p) => {
+    queries.push(sql);
+    if (p) params.push(p);
+    return { rows: [] };
+  });
+  const clientRelease = sinon.stub();
+
+  sinon.stub(pg.Pool.prototype, 'connect').resolves({
+    query: clientQuery,
+    release: clientRelease,
+  });
+
+  return { queries, params, clientQuery, clientRelease };
+}
+
 describe('withAdvisoryLock', () => {
   afterEach(() => {
     sinon.restore();
   });
 
-  it('should acquire and release advisory lock around fn', async () => {
-    /** @type {string[]} */
-    const queries = [];
-    sinon.stub(pg.Pool.prototype, 'query').callsFake(async (/** @type {string} */ sql) => {
-      queries.push(sql);
-      return { rows: [] };
-    });
+  it('should acquire and release advisory lock on a single client', async () => {
+    const { clientRelease, queries } = makeClient();
 
     const pool = new pg.Pool({ connectionString: 'postgresql://localhost/test' });
     const context = createUmzeptionPgContext(pool);
@@ -29,15 +51,11 @@ describe('withAdvisoryLock', () => {
     assert.equal(queries.length, 2);
     assert.ok(queries[0]?.includes('pg_advisory_lock'), 'should acquire lock');
     assert.ok(queries[1]?.includes('pg_advisory_unlock'), 'should release lock');
+    assert.ok(clientRelease.calledOnce, 'should release client');
   });
 
-  it('should release lock even when fn throws', async () => {
-    /** @type {string[]} */
-    const queries = [];
-    sinon.stub(pg.Pool.prototype, 'query').callsFake(async (/** @type {string} */ sql) => {
-      queries.push(sql);
-      return { rows: [] };
-    });
+  it('should release lock and client even when fn throws', async () => {
+    const { clientRelease, queries } = makeClient();
 
     const pool = new pg.Pool({ connectionString: 'postgresql://localhost/test' });
     const context = createUmzeptionPgContext(pool);
@@ -51,15 +69,11 @@ describe('withAdvisoryLock', () => {
 
     assert.equal(queries.length, 2);
     assert.ok(queries[1]?.includes('pg_advisory_unlock'), 'should release lock on error');
+    assert.ok(clientRelease.calledOnce, 'should release client on error');
   });
 
   it('should pass lockId as string parameter', async () => {
-    /** @type {unknown[][]} */
-    const params = [];
-    sinon.stub(pg.Pool.prototype, 'query').callsFake(async (/** @type {string} */ _sql, /** @type {unknown[]} */ p) => {
-      if (p) params.push(p);
-      return { rows: [] };
-    });
+    const { params } = makeClient();
 
     const pool = new pg.Pool({ connectionString: 'postgresql://localhost/test' });
     const context = createUmzeptionPgContext(pool);
@@ -72,8 +86,6 @@ describe('withAdvisoryLock', () => {
   });
 
   it('should reject non-integer lockId', async () => {
-    sinon.stub(pg.Pool.prototype, 'query').resolves({ rows: [] });
-
     const pool = new pg.Pool({ connectionString: 'postgresql://localhost/test' });
     const context = createUmzeptionPgContext(pool);
 
@@ -84,8 +96,6 @@ describe('withAdvisoryLock', () => {
   });
 
   it('should reject NaN lockId', async () => {
-    sinon.stub(pg.Pool.prototype, 'query').resolves({ rows: [] });
-
     const pool = new pg.Pool({ connectionString: 'postgresql://localhost/test' });
     const context = createUmzeptionPgContext(pool);
 
@@ -96,8 +106,6 @@ describe('withAdvisoryLock', () => {
   });
 
   it('should reject Infinity lockId', async () => {
-    sinon.stub(pg.Pool.prototype, 'query').resolves({ rows: [] });
-
     const pool = new pg.Pool({ connectionString: 'postgresql://localhost/test' });
     const context = createUmzeptionPgContext(pool);
 
@@ -108,8 +116,6 @@ describe('withAdvisoryLock', () => {
   });
 
   it('should reject unsafe integer lockId', async () => {
-    sinon.stub(pg.Pool.prototype, 'query').resolves({ rows: [] });
-
     const pool = new pg.Pool({ connectionString: 'postgresql://localhost/test' });
     const context = createUmzeptionPgContext(pool);
 
@@ -120,7 +126,7 @@ describe('withAdvisoryLock', () => {
   });
 
   it('should return the value from fn', async () => {
-    sinon.stub(pg.Pool.prototype, 'query').resolves({ rows: [] });
+    makeClient();
 
     const pool = new pg.Pool({ connectionString: 'postgresql://localhost/test' });
     const context = createUmzeptionPgContext(pool);

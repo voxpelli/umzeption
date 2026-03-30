@@ -50,8 +50,6 @@ export class BaseUmzeptionStorage {
   async ensureTable (context) {
     if (this.#tableEnsured) return;
 
-    this.#tableEnsured = true;
-
     await this.query(context, `
       CREATE TABLE IF NOT EXISTS ${this.#tableName} (
         name VARCHAR(255) PRIMARY KEY,
@@ -63,5 +61,7 @@ export class BaseUmzeptionStorage {
       CREATE INDEX IF NOT EXISTS idx_${this.#tableName}_created_at
       ON ${this.#tableName} (created_at)
     `);
+
+    this.#tableEnsured = true;
   }
 }

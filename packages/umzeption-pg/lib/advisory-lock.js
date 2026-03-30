@@ -15,10 +15,15 @@ export async function withAdvisoryLock (context, lockId, fn) {
     throw new TypeError(`Invalid lockId: ${lockId}. Must be a safe integer.`);
   }
 
-  await context.value.query('SELECT pg_advisory_lock($1)', [String(lockId)]);
+  const client = await context.value.connect();
   try {
-    return await fn();
+    await client.query('SELECT pg_advisory_lock($1)', [String(lockId)]);
+    try {
+      return await fn();
+    } finally {
+      await client.query('SELECT pg_advisory_unlock($1)', [String(lockId)]);
+    }
   } finally {
-    await context.value.query('SELECT pg_advisory_unlock($1)', [String(lockId)]);
+    client.release();
   }
 }

@@ -3,7 +3,6 @@ import { describe, expect, it } from 'tstyche';
 import type {
   AnyUmzeptionContext,
   DefineUmzeptionContexts,
-  FastifyPostgresStyleDb,
   UmzeptionContext,
   UmzeptionDependency,
   UmzeptionLookupOptions,
@@ -12,24 +11,20 @@ import type {
 
 import {
   createUmzeptionContext,
-  createUmzeptionPgContext,
   installSchemaFromString,
-  pgInstallSchemaFromString,
   umzeption,
   BaseUmzeptionStorage,
-  UmzeptionPgStorage,
 } from '../index.js';
 
 describe('UmzeptionContext', () => {
   it('should have type and value fields', () => {
-    expect<UmzeptionContext<'pg', FastifyPostgresStyleDb>>().type.toBeAssignableTo<AnyUmzeptionContext>();
     expect<UmzeptionContext<'unknown', unknown>>().type.toBeAssignableTo<AnyUmzeptionContext>();
   });
 });
 
 describe('DefineUmzeptionContexts', () => {
-  it('should include pg and unknown context keys', () => {
-    expect<keyof DefineUmzeptionContexts>().type.toEqual<'pg' | 'unknown'>();
+  it('should include the unknown context key by default', () => {
+    expect<keyof DefineUmzeptionContexts>().type.toEqual<'unknown'>();
   });
 });
 
@@ -42,12 +37,6 @@ describe('createUmzeptionContext', () => {
   });
 });
 
-describe('createUmzeptionPgContext', () => {
-  it('should be a function', () => {
-    expect(createUmzeptionPgContext).type.toBeAssignableTo<Function>();
-  });
-});
-
 describe('umzeption', () => {
   it('should be a function', () => {
     expect(umzeption).type.toBeAssignableTo<Function>();
@@ -57,12 +46,6 @@ describe('umzeption', () => {
 describe('installSchemaFromString', () => {
   it('should be a function accepting context and sql string', () => {
     expect(installSchemaFromString).type.toBeAssignableTo<(context: AnyUmzeptionContext, sql: string) => Promise<void>>();
-  });
-});
-
-describe('pgInstallSchemaFromString', () => {
-  it('should be a function accepting pg context and sql string', () => {
-    expect(pgInstallSchemaFromString).type.toBeAssignableTo<(context: UmzeptionContext<'pg', FastifyPostgresStyleDb>, sql: string) => Promise<void>>();
   });
 });
 
@@ -91,11 +74,5 @@ describe('UmzeptionStorage', () => {
 describe('BaseUmzeptionStorage', () => {
   it('should be constructable', () => {
     expect(new BaseUmzeptionStorage()).type.toBeAssignableTo<UmzeptionStorage<AnyUmzeptionContext>>();
-  });
-});
-
-describe('UmzeptionPgStorage', () => {
-  it('should extend BaseUmzeptionStorage', () => {
-    expect(new UmzeptionPgStorage()).type.toBeAssignableTo<BaseUmzeptionStorage<AnyUmzeptionContext>>();
   });
 });
