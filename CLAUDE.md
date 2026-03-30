@@ -125,7 +125,74 @@ The `type-coverage` check runs in `--strict` mode at `--at-least 99`. Every unty
 
 ## Related Packages
 
-- **`@voxpelli/pg-utils`** — downstream consumer of umzeption for test DB lifecycle. It imports `createUmzeptionPgContext` and `pgInstallSchemaFromString` from umzeption (needs updating to import from `umzeption-pg` post-monorepo split)
+- **`@voxpelli/pg-utils`** — downstream consumer of umzeption for test DB lifecycle. Imports `createUmzeptionPgContext` and `pgInstallSchemaFromString` (needs updating to import from `umzeption-pg` post-monorepo split)
+- **`@voxpelli/tsconfig`** — shared TypeScript configuration base
+- **`@voxpelli/eslint-config`** — extends neostandard with additional opinionated rules
+- **`npm-run-all2`** — script orchestration (`run-s` for sequential, `run-p` for parallel)
+- **`plugin-importer`** — topological dependency resolution and dynamic ESM imports
+- **`tstyche`** — type contract testing (`.tst.ts` files)
+- **`type-coverage`** — TypeScript type coverage measurement
+
+## Build & Script Pipeline
+
+The root `package.json` orchestrates builds via `npm-run-all2`:
+- `build` → `run-s build:0 build:1-declaration` (sequential: clean first, then generate)
+  - `build:0` → `run-s clean` (deletes generated `.d.ts` via `scripts/clean-declarations.js`)
+  - `build:1-declaration` → `run-s build:1-declaration:*` (runs `tsc -p` for each package)
+- `check` → `run-s clean && run-p check:*` (parallel checks after clean)
+- `test` → `run-s check test:*` (check suite + tests, sequential)
+- `test-ci` → `run-s check test:*` (same as test, used in CI matrix)
+- `test:node` → `run-s --continue-on-error test:node:*` (runs both package tests, continues if one fails)
+
+Each package's `tsc` uses `--declaration --emitDeclarationOnly` — it only generates `.d.ts` files, not JS.
+
+## Exports & Public API
+
+Both packages use a single `"exports": "./index.js"` entry point. The `index.js` re-exports from `lib/` modules. The `index.d.ts` files are hand-authored (committed) with type-only re-exports and may include overloaded signatures not expressible in JSDoc.
+
+## CI / GitHub Workflows
+
+Located in `.github/workflows/`:
+- `nodejs.yml` — primary: matrix of Node 20/22/24 × ubuntu/windows, runs `npm run test-ci`
+- Lint job: separate from test matrix, runs on `ubuntu-latest` with Node LTS
+- Release Please workflow handles version bumps and changelogs automatically
+
+## Release Please Configuration
+
+- Config: `.github/release-please/config.json` — both packages listed, `bump-minor-pre-major: true`, `include-component-in-tag: true`
+- Manifest: `.github/release-please/manifest.json` — tracks current versions
+- Changelog sections configured: feat→Features, fix→Bug Fixes, chore→Miscellaneous
+
+## Renovate
+
+Configured in `renovate.json`. Key: ignores workspace-internal cross-references (umzeption packages don't get PR'd to update each other).
+
+## TypeScript Configuration Inheritance
+
+Both packages extend `@voxpelli/tsconfig/node20.json` which enables:
+- `strict: true`, `noUncheckedIndexedAccess: true`, `exactOptionalPropertyTypes: true`
+- `skipLibCheck: true`, `resolveJsonModule: true`
+- Local overrides: `declaration: true`, `emitDeclarationOnly: true`
+
+## Upstream Dependencies
+
+### umzug v3
+The migration engine. Key types: `RunnableMigration<T>` (what `resolveMigrations` returns), `MigrationParams<T>` (passed to up/down functions with `{ context, name, path }`), `UmzugStorage` (interface for `logMigration`/`unlogMigration`/`executedMigrations`).
+
+### plugin-importer
+Used for two things:
+- `resolvePluginsInOrder(definitions)` — topological sort of migration definitions by their `dependencies` arrays
+- `importAbsolutePath(file)` — dynamic import of migration files with proper URL handling
+
+## Migration Fixture Shape
+
+Test fixtures in `packages/umzeption/test/fixtures/` follow two patterns:
+- **Flat exports**: `export async function up({ context }) { ... }` + `export async function down({ context }) { ... }`
+- **Config wrapper**: `export const umzeptionConfig = { ... }` for definition fixtures
+
+## Environment Variables
+
+- `UMZEPTION_SUPPRESS_WARNINGS` — set to `1` to silence runtime warnings (e.g., `**` glob on Node 20, empty glob matches)
 
 ## Common Commands
 
