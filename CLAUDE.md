@@ -179,6 +179,16 @@ Each package's `tsc` uses `--declaration --emitDeclarationOnly` — it only gene
 
 Both packages use a single `"exports": "./index.js"` entry point. The `index.js` re-exports from `lib/` modules. The `index.d.ts` files are hand-authored (committed) with type-only re-exports and may include overloaded signatures not expressible in JSDoc.
 
+### umzeption (core) exports
+- **Functions**: `umzeption`, `umzeptionPending`, `createUmzeptionContext`, `installSchemaFromString`, `registerSchemaInstaller`, `computeSchemaChecksum`
+- **Classes**: `BaseUmzeptionStorage`, `UmzeptionError`, `UmzeptionValidationError`, `UmzeptionMigrationImportError`, `UmzeptionUnsupportedContextError`
+- **Types** (via `index.d.ts`): `AnyUmzeptionContext`, `DefineUmzeptionContexts`, `UmzeptionContext`, `UmzeptionDefinition`, `UmzeptionDependency`, `UmzeptionLookupOptions`, `UmzeptionStorage`
+
+### umzeption-pg exports
+- **Functions**: `createUmzeptionPgContext`, `pgInstallSchemaFromString`, `withAdvisoryLock`
+- **Classes**: `UmzeptionPgStorage`
+- **Types** (via `index.d.ts`): `FastifyPostgresStyleDb`, `UmzeptionPgContext`
+
 ## CI / GitHub Workflows
 
 Located in `.github/workflows/`. Most are thin wrappers delegating to `voxpelli/ghatemplates` reusable workflows:
@@ -230,6 +240,31 @@ Note: v3 changed migration signatures from `(context) => ...` to `({ name, path,
 Used for two things:
 - `resolvePluginsInOrder(plugins, pluginLoader)` — topological sort and load by dependency order, returns `Promise<PluginDefinition[]>` with dependencies before dependents
 - `importAbsolutePath(absolutePath)` — like `import()` but handles Windows paths correctly (converts to `file://` URL)
+
+## Core Lookup Flow
+
+`umzeption(config)` returns a function `(context) => migrations[]` suitable for umzug's `migrations` option. Internally:
+
+1. `umzeptionLookup` resolves `cwd` from `meta.url` or `cwd` option (mutually exclusive)
+2. Creates `mainDefinition` with `noPrefix: true`, `name: 'main'`, defaults for `glob`/`installSchema`
+3. Loads dependency definitions via `loadDependencies` → `plugin-importer`'s `loadPlugins` + `resolvePluginsInOrder`
+4. Each dependency module is validated by `ensureUmzeptionDefinition` (must have `name`, `pluginDir`, `glob: string[]`, `installSchema: function`, optional `uninstallSchema`)
+5. Returns `[...installations, ...fileMigrations]` — install steps first, then file migrations
+
+`umzeptionPending(config, storage, context)` resolves all migrations then filters out already-executed ones (using `Set` for O(1) lookups).
+
+### Definition Validation Rules
+- `name` must be non-empty, must not contain `|` or `:` (reserved delimiters)
+- `pluginDir` must be non-empty
+- `glob` must be a `string[]`
+- `installSchema` must be a function
+- `uninstallSchema` if present must be a function
+- Both `installSchema`/`uninstallSchema` are wrapped in async to ensure they return promises
+
+### Dependency Module Formats
+Dependencies can export either:
+- `export const umzeptionConfig = { glob, installSchema, ... }` — config object
+- Direct module with plugin-importer compatible shape (`name`, `dependencies`, etc.)
 
 ## Migration Fixture Shape
 

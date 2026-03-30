@@ -72,7 +72,7 @@ describe('withAdvisoryLock', () => {
     assert.ok(clientRelease.calledOnce, 'should release client on error');
   });
 
-  it('should pass lockId as string parameter', async () => {
+  it('should pass lockId as parameterized query value', async () => {
     const { params } = makeClient();
 
     const pool = new pg.Pool({ connectionString: 'postgresql://localhost/test' });
@@ -146,6 +146,30 @@ describe('withAdvisoryLock', () => {
 
     assert.equal(queries[0], 'SET lock_timeout = 5000');
     assert.ok(queries[1]?.includes('pg_advisory_lock'), 'should acquire lock after timeout set');
+  });
+
+  it('should reject negative lockTimeoutMs', async () => {
+    makeClient();
+
+    const pool = new pg.Pool({ connectionString: 'postgresql://localhost/test' });
+    const context = createUmzeptionPgContext(pool);
+
+    await assert.rejects(
+      () => withAdvisoryLock(context, 1, async () => {}, { lockTimeoutMs: -1 }),
+      /Invalid lockTimeoutMs.*non-negative safe integer/
+    );
+  });
+
+  it('should reject NaN lockTimeoutMs', async () => {
+    makeClient();
+
+    const pool = new pg.Pool({ connectionString: 'postgresql://localhost/test' });
+    const context = createUmzeptionPgContext(pool);
+
+    await assert.rejects(
+      () => withAdvisoryLock(context, 1, async () => {}, { lockTimeoutMs: Number.NaN }),
+      /Invalid lockTimeoutMs.*non-negative safe integer/
+    );
   });
 
   it('should not throw when unlock fails (best-effort)', async () => {

@@ -21,7 +21,13 @@ export async function withAdvisoryLock (context, lockId, fn, options) {
 
   try {
     if (options?.lockTimeoutMs !== undefined) {
-      await client.query(`SET lock_timeout = ${Number(options.lockTimeoutMs)}`);
+      const timeout = Number(options.lockTimeoutMs);
+
+      if (!Number.isSafeInteger(timeout) || timeout < 0) {
+        throw new TypeError(`Invalid lockTimeoutMs: ${options.lockTimeoutMs}. Must be a non-negative safe integer.`);
+      }
+
+      await client.query(`SET lock_timeout = ${timeout}`);
     }
 
     await client.query('SELECT pg_advisory_lock($1)', [lockId]);
