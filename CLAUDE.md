@@ -118,10 +118,35 @@ Each package has its own `.knip.jsonc`. Key entries:
 The `fs.glob` API (Node 22+) triggers this rule. The dynamic `import('node:fs/promises')` + `'glob' in fs` check is specifically structured to avoid the lint error while still using the feature when available.
 
 ### Type coverage
-The `type-coverage` check runs in `--strict` mode at `--at-least 99`. Every untyped variable or expression counts against the score. Common fixes:
+The `type-coverage` check runs in `--strict` mode at `--at-least 99`. In strict mode, these all count as uncovered:
+- Identifiers typed as `any` or containing `any` in type arguments (e.g., `any[]`, `Promise<any>`)
+- Type assertions (`foo as string`, `foo!`) — except `as const` and `as unknown`
+- `Object` type and empty `{}` type
+
+Common fixes:
 - Add `/** @type {string[]} */` before array literals
 - Use `/** @type {any} */` for intentional catch variables
 - Add `/** @type {string} */` for class property assignments
+
+### No lock file
+`.npmrc` contains `package-lock=false`. The project intentionally has no `package-lock.json` or `yarn.lock` (both are gitignored with comment "We're a library, so please, no lock files").
+
+### Husky is scaffolded but not auto-enabled
+Husky is a root devDependency with `husky-enable`/`husky-disable` scripts, but no `.husky/` directory exists and no `prepare` script. It must be activated manually. `validate-conventional-commit` is a devDependency intended for use via husky hooks when enabled.
+
+### `umzeption-pg` uses wildcard dep, not workspace protocol
+`umzeption-pg` has `"umzeption": "*"` (plain wildcard) in devDependencies, NOT `workspace:*`. This was an intentional change for npm compatibility.
+
+### ESLint config pattern
+Both packages use identical `eslint.config.js`:
+```js
+import { voxpelli } from '@voxpelli/eslint-config';
+export default [
+  ...voxpelli({ noMocha: true }),
+  { files: ['test/**/*.js'], rules: { 'n/no-unsupported-features/node-builtins': 0 } },
+];
+```
+`noMocha: true` disables mocha-specific rules. Test files disable `n/no-unsupported-features/node-builtins` to allow using newer Node APIs.
 
 ## Related Packages
 
@@ -135,14 +160,18 @@ The `type-coverage` check runs in `--strict` mode at `--at-least 99`. Every unty
 
 ## Build & Script Pipeline
 
-The root `package.json` orchestrates builds via `npm-run-all2`:
+The **root** `package.json` delegates to workspaces:
+- `build` → `npm run build --workspaces`
+- `check` → `npm run check --workspaces --if-present`
+- `test` / `test-ci` → `npm run test --workspaces --if-present`
+
+Each **per-package** `package.json` orchestrates internally via `npm-run-all2`:
 - `build` → `run-s build:0 build:1-declaration` (sequential: clean first, then generate)
   - `build:0` → `run-s clean` (deletes generated `.d.ts` via `scripts/clean-declarations.js`)
-  - `build:1-declaration` → `run-s build:1-declaration:*` (runs `tsc -p` for each package)
-- `check` → `run-s clean && run-p check:*` (parallel checks after clean)
+  - `build:1-declaration` → `tsc -p declaration.tsconfig.json`
+- `check` → `run-s clean && run-p check:* --continue-on-error` (parallel checks after clean, reports all failures)
 - `test` → `run-s check test:*` (check suite + tests, sequential)
-- `test-ci` → `run-s check test:*` (same as test, used in CI matrix)
-- `test:node` → `run-s --continue-on-error test:node:*` (runs both package tests, continues if one fails)
+- `prepublishOnly` → `run-s build` (ensures declarations are generated before publishing)
 
 Each package's `tsc` uses `--declaration --emitDeclarationOnly` — it only generates `.d.ts` files, not JS.
 
@@ -152,43 +181,94 @@ Both packages use a single `"exports": "./index.js"` entry point. The `index.js`
 
 ## CI / GitHub Workflows
 
-Located in `.github/workflows/`:
-- `nodejs.yml` — primary: matrix of Node 20/22/24 × ubuntu/windows, runs `npm run test-ci`
-- Lint job: separate from test matrix, runs on `ubuntu-latest` with Node LTS
-- Release Please workflow handles version bumps and changelogs automatically
+Located in `.github/workflows/`. Most are thin wrappers delegating to `voxpelli/ghatemplates` reusable workflows:
+
+- **`nodejs.yml`** ("Node CI") — test matrix: Node 20/22/24 × ubuntu/windows, runs `npm run test-ci`
+- **`lint.yml`** ("Linting") — lint on ubuntu-latest with Node LTS
+- **`compliance.yml`** ("Compliance") — PR compliance check via `mtfoley/pr-compliance-action`
+- **`release-please.yml`** — version bumps and changelogs
+- **`ts-internal.yml`** ("Type Checks, Internal Types") — tsc against TS 5.8 + next, runs on cron Mon/Wed/Fri
+- **`tstyche.yml`** ("Type Tests, External Types") — tstyche against TS >=5.8 + next, same cron schedule
+- **`dependency-review.yml`** — dependency review on PRs
 
 ## Release Please Configuration
 
-- Config: `.github/release-please/config.json` — both packages listed, `bump-minor-pre-major: true`, `include-component-in-tag: true`
+- Config: `.github/release-please/config.json` — both packages listed
+  - `bump-minor-pre-major: true` — breaking changes only bump minor while `< 1.0.0`
+  - `bump-patch-for-minor-pre-major: true` — features only bump patch while `< 1.0.0`
+  - `include-component-in-tag: false` — tags are `v<version>`, not `<component>-v<version>`
+  - `release-type: "node"`
 - Manifest: `.github/release-please/manifest.json` — tracks current versions
-- Changelog sections configured: feat→Features, fix→Bug Fixes, chore→Miscellaneous
+- Changelog sections use emojis: feat→"Features", fix→"Fixes", docs→"Documentation", chore/perf/refactor/test→"Chores", build/ci→"Automation" (ci is hidden)
 
 ## Renovate
 
-Configured in `renovate.json`. Key: ignores workspace-internal cross-references (umzeption packages don't get PR'd to update each other).
+Configured in `renovate.json`. Extends `github>voxpelli/renovate-config` (shared config from the author). Key: ignores workspace-internal cross-references (umzeption packages don't get PR'd to update each other).
 
 ## TypeScript Configuration Inheritance
 
-Both packages extend `@voxpelli/tsconfig/node20.json` which enables:
+Both packages have two tsconfig files:
+- **`tsconfig.json`** — extends `@voxpelli/tsconfig/node20.json`, used for type-checking. `files: ["index.js"]`, includes `lib/**/*` and `test/**/*`, `compilerOptions: { "types": ["node"] }`
+- **`declaration.tsconfig.json`** — extends `./tsconfig.json`, excludes `test/**/*.js`, adds `declaration: true`, `declarationMap: true`, `emitDeclarationOnly: true`, `noEmit: false`
+
+Inherited from `@voxpelli/tsconfig/node20.json`:
 - `strict: true`, `noUncheckedIndexedAccess: true`, `exactOptionalPropertyTypes: true`
 - `skipLibCheck: true`, `resolveJsonModule: true`
-- Local overrides: `declaration: true`, `emitDeclarationOnly: true`
 
 ## Upstream Dependencies
 
 ### umzug v3
-The migration engine. Key types: `RunnableMigration<T>` (what `resolveMigrations` returns), `MigrationParams<T>` (passed to up/down functions with `{ context, name, path }`), `UmzugStorage` (interface for `logMigration`/`unlogMigration`/`executedMigrations`).
+The migration engine. Key types:
+- `RunnableMigration<T>` — `{ name: string, path?: string, up: MigrationFn<T>, down?: MigrationFn<T> }` (what `resolveMigrations` returns)
+- `MigrationParams<T>` — `{ name: string, path?: string, context: T }` (passed to up/down functions)
+- `UmzugStorage<Ctx>` — interface with `logMigration(params)`, `unlogMigration(params)`, `executed(meta)` returning `Promise<string[]>`
+- `MigrationFn<T>` — `(params: MigrationParams<T>) => Promise<unknown>`
 
-### plugin-importer
+Note: v3 changed migration signatures from `(context) => ...` to `({ name, path, context }) => ...` and storage methods from `logMigration(name)` to `logMigration({ name, path, context })`.
+
+### plugin-importer (^0.2.0)
 Used for two things:
-- `resolvePluginsInOrder(definitions)` — topological sort of migration definitions by their `dependencies` arrays
-- `importAbsolutePath(file)` — dynamic import of migration files with proper URL handling
+- `resolvePluginsInOrder(plugins, pluginLoader)` — topological sort and load by dependency order, returns `Promise<PluginDefinition[]>` with dependencies before dependents
+- `importAbsolutePath(absolutePath)` — like `import()` but handles Windows paths correctly (converts to `file://` URL)
 
 ## Migration Fixture Shape
 
 Test fixtures in `packages/umzeption/test/fixtures/` follow two patterns:
 - **Flat exports**: `export async function up({ context }) { ... }` + `export async function down({ context }) { ... }`
 - **Config wrapper**: `export const umzeptionConfig = { ... }` for definition fixtures
+
+## Error Codes
+
+| Code | Class | Usage |
+|------|-------|-------|
+| `UMZEPTION_VALIDATION_ERROR` | `UmzeptionValidationError` | Invalid definitions, table names |
+| `UMZEPTION_MIGRATION_IMPORT_ERROR` | `UmzeptionMigrationImportError` | Failed migration file imports |
+| `UMZEPTION_UNSUPPORTED_CONTEXT` | `UmzeptionUnsupportedContextError` | Unknown context type |
+
+Note: The codebase also uses plain `TypeError` for input validation (invalid lockId, timeout, migration exports) and `Error` with `{ cause }` for wrapping lower-level failures. Not all throw sites use custom error classes.
+
+## Migration Naming & Execution Order
+
+Two delimiters are used in migration IDs:
+- **`|`** (pipe) separates definition name from filename: `my-dep|001-create.js`
+- **`:`** (colon) marks install steps: `my-dep:install`, `:install`
+- Both are **forbidden** in filenames and definition names (validated with `/[|:]/.test()`)
+- `noPrefix: true` on the main definition means bare filenames (e.g., `001-create.js`) and `:install` as install step
+
+Execution order: install steps first (dependencies then main), then file migrations (dependencies then main).
+
+## Dependency Graph
+
+```
+umzeption (core)
+  peerDeps: umzug ^3.8.1
+  deps: @voxpelli/type-helpers, @voxpelli/typed-utils, plugin-importer ^0.2.0
+
+umzeption-pg (adapter)
+  peerDeps: umzeption ^1.0.0, umzug ^3.8.1
+  deps: pg ^8.11.2
+  devDeps: umzeption * (wildcard, not workspace:)
+```
 
 ## Environment Variables
 
