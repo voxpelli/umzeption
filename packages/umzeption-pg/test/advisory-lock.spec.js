@@ -81,8 +81,8 @@ describe('withAdvisoryLock', () => {
     await withAdvisoryLock(context, 99, async () => {});
 
     assert.equal(params.length, 2);
-    assert.deepEqual(params[0], ['99']);
-    assert.deepEqual(params[1], ['99']);
+    assert.deepEqual(params[0], [99]);
+    assert.deepEqual(params[1], [99]);
   });
 
   it('should reject non-integer lockId', async () => {

@@ -24,13 +24,13 @@ export async function withAdvisoryLock (context, lockId, fn, options) {
       await client.query(`SET lock_timeout = ${Number(options.lockTimeoutMs)}`);
     }
 
-    await client.query('SELECT pg_advisory_lock($1)', [String(lockId)]);
+    await client.query('SELECT pg_advisory_lock($1)', [lockId]);
 
     try {
       return await fn();
     } finally {
       // Best-effort unlock — PG auto-releases session locks on disconnect
-      try { await client.query('SELECT pg_advisory_unlock($1)', [String(lockId)]); } catch { /* ignored */ }
+      try { await client.query('SELECT pg_advisory_unlock($1)', [lockId]); } catch { /* ignored */ }
     }
   } finally {
     client.release();
