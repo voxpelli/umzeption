@@ -135,4 +135,40 @@ describe('withAdvisoryLock', () => {
 
     assert.deepEqual(result, { migrated: 5 });
   });
+
+  it('should set lock_timeout when lockTimeoutMs is provided', async () => {
+    const { queries } = makeClient();
+
+    const pool = new pg.Pool({ connectionString: 'postgresql://localhost/test' });
+    const context = createUmzeptionPgContext(pool);
+
+    await withAdvisoryLock(context, 1, async () => {}, { lockTimeoutMs: 5000 });
+
+    assert.equal(queries[0], 'SET lock_timeout = 5000');
+    assert.ok(queries[1]?.includes('pg_advisory_lock'), 'should acquire lock after timeout set');
+  });
+
+  it('should not throw when unlock fails (best-effort)', async () => {
+    const clientRelease = sinon.stub();
+    let callCount = 0;
+    const clientQuery = sinon.stub().callsFake(async () => {
+      callCount++;
+      // Fail on the unlock (second query)
+      if (callCount === 2) throw new Error('connection lost');
+      return { rows: [] };
+    });
+
+    sinon.stub(pg.Pool.prototype, 'connect').resolves({
+      query: clientQuery,
+      release: clientRelease,
+    });
+
+    const pool = new pg.Pool({ connectionString: 'postgresql://localhost/test' });
+    const context = createUmzeptionPgContext(pool);
+
+    const result = await withAdvisoryLock(context, 1, async () => 'ok');
+
+    assert.equal(result, 'ok');
+    assert.ok(clientRelease.calledOnce, 'should still release client');
+  });
 });
