@@ -1,3 +1,5 @@
+import { UmzeptionUnsupportedContextError } from './errors.js';
+
 /** @type {Map<string, (context: import('./advanced-types.js').AnyUmzeptionContext, sql: string) => Promise<void>>} */
 const schemaInstallers = new Map();
 
@@ -23,5 +25,5 @@ export async function installSchemaFromString (context, createTablesString) {
     await installer(context, createTablesString);
     return;
   }
-  throw new Error(`Unsupported context type: ${context.type}`);
+  throw new UmzeptionUnsupportedContextError(context.type);
 }

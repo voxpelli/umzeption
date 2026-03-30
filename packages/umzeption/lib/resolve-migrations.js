@@ -7,8 +7,8 @@ import { importAbsolutePath } from 'plugin-importer';
 let fsGlob;
 
 try {
-  // fs.glob is available in Node 22+, not in Node 20
   const fs = await import('node:fs/promises');
+
   if ('glob' in fs && typeof fs.glob === 'function') {
     fsGlob = /** @type {typeof fsGlob} */ (fs.glob);
   }
@@ -17,16 +17,13 @@ try {
 }
 
 /**
- * Simple pattern matching for a single filename (no path separators).
- * Supports `*` as wildcard matching any sequence of non-separator chars.
+ * Compile a glob-like pattern into a regex for matching filenames.
  *
  * @param {string} pattern
- * @param {string} name
- * @returns {boolean}
+ * @returns {RegExp}
  */
-function matchSimplePattern (pattern, name) {
-  const regex = new RegExp('^' + pattern.replaceAll(/[.+^${}()|[\]\\]/g, '\\$&').replaceAll('*', '[^/]*') + '$');
-  return regex.test(name);
+function compilePattern (pattern) {
+  return new RegExp('^' + pattern.replaceAll(/[.+^${}()|[\]\\]/g, '\\$&').replaceAll('*', '[^/]*') + '$');
 }
 
 /**
@@ -44,11 +41,12 @@ async function readdirGlob (patterns, cwd) {
     const lastSlash = pattern.lastIndexOf('/');
     const subdir = lastSlash !== -1 ? pattern.slice(0, lastSlash) : '.';
     const filePattern = lastSlash !== -1 ? pattern.slice(lastSlash + 1) : pattern;
+    const fileRegex = compilePattern(filePattern);
     const targetDir = path.join(cwd, subdir);
     try {
       const entries = await readdir(targetDir);
       for (const entry of entries) {
-        if (matchSimplePattern(filePattern, entry)) {
+        if (fileRegex.test(entry)) {
           results.push(path.join(targetDir, entry));
         }
       }
@@ -195,25 +193,23 @@ export async function resolveMigrations (definition, noop = false, options) {
       throw new TypeError(`Invalid migration "${migrationId}": "up" export must be a function, got ${typeof up}`);
     }
 
-    const name = migrationId;
-
     /** @type {import('umzug').RunnableMigration<T>} */
     const result = {
-      name,
+      name: migrationId,
       path: file,
       up: noop
         ? async () => {}
         : async ({ context }) => {
           /** @type {Promise<unknown>} */
-          const p = up.call(migration, ({ path: file, name, context }));
-          return timeout ? withTimeout(p, timeout, name) : p;
+          const p = up.call(migration, ({ path: file, name: migrationId, context }));
+          return timeout ? withTimeout(p, timeout, migrationId) : p;
         },
       down: noop
         ? async () => {}
         : async ({ context }) => {
           /** @type {Promise<unknown>} */
-          const p = down.call(migration, ({ path: file, name, context }));
-          return timeout ? withTimeout(p, timeout, name) : p;
+          const p = down.call(migration, ({ path: file, name: migrationId, context }));
+          return timeout ? withTimeout(p, timeout, migrationId) : p;
         },
     };
 

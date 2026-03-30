@@ -30,8 +30,7 @@ async function cleanDeclarations (dir, { keepIndex = false, maxDepth = 1 } = {})
   }
 
   if (maxDepth > 1) {
-    const { readdir: readdirWithTypes } = await import('node:fs/promises');
-    const subEntries = await readdirWithTypes(fullDir, { withFileTypes: true });
+    const subEntries = await readdir(fullDir, { withFileTypes: true });
     for (const sub of subEntries) {
       if (sub.isDirectory()) {
         await cleanDeclarations(path.join(dir, sub.name), { maxDepth: maxDepth - 1 });

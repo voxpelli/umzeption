@@ -1,3 +1,5 @@
+import { UmzeptionUnsupportedContextError } from './errors.js';
+
 /** @typedef {import('./advanced-types.js').AnyUmzeptionContext} AnyUmzeptionContext */
 
 /**
@@ -43,7 +45,7 @@ export class BaseUmzeptionStorage {
 
   /** @type {UmzeptionStorage<T>["query"]} */
   async query (context, _query, ..._values) {
-    throw new Error(`Unsupported context type: ${context.type}`);
+    throw new UmzeptionUnsupportedContextError(context.type);
   }
 
   /** @type {UmzeptionStorage<T>["ensureTable"]} */

@@ -1,4 +1,4 @@
-import { BaseUmzeptionStorage } from 'umzeption';
+import { BaseUmzeptionStorage, UmzeptionUnsupportedContextError } from 'umzeption';
 
 /** @typedef {import('./pg-types.d.ts').UmzeptionPgContext} UmzeptionPgContext */
 
@@ -12,6 +12,6 @@ export class UmzeptionPgStorage extends BaseUmzeptionStorage {
     if (context.type === 'pg') {
       return context.value.query(query, values);
     }
-    throw new Error(`Unsupported context type: ${context.type}`);
+    throw new UmzeptionUnsupportedContextError(context.type);
   }
 }

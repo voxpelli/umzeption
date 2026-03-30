@@ -3,15 +3,17 @@ import { registerSchemaInstaller } from 'umzeption';
 /** @typedef {import('./pg-types.d.ts').UmzeptionPgContext} UmzeptionPgContext */
 
 /**
- * Strip block comments and single-line comments from SQL,
- * preserving string literals. Uses a state machine to avoid
+ * Single-pass SQL parser: strips comments and splits on semicolons,
+ * respecting string literals. Uses a state machine to avoid
  * polynomial regex backtracking.
  *
  * @param {string} sql
- * @returns {string}
+ * @returns {string[]}
  */
-function stripComments (sql) {
-  let result = '';
+function splitStatements (sql) {
+  /** @type {string[]} */
+  const parts = [];
+  let current = '';
   let i = 0;
 
   while (i < sql.length) {
@@ -21,7 +23,7 @@ function stripComments (sql) {
       while (i < sql.length && !(sql[i] === '*' && sql[i + 1] === '/')) {
         i++;
       }
-      if (i < sql.length) i += 2; // skip */
+      if (i < sql.length) i += 2;
       continue;
     }
     // Single-line comment: -- ...
@@ -34,81 +36,36 @@ function stripComments (sql) {
     }
     // String literal: '...' (with '' escape)
     if (sql[i] === "'") {
-      result += sql[i++];
+      current += sql[i++];
       while (i < sql.length) {
         if (sql[i] === "'" && sql[i + 1] === "'") {
-          result += "''";
+          current += "''";
           i += 2;
         } else if (sql[i] === "'") {
-          result += "'";
+          current += "'";
           i++;
           break;
         } else {
-          result += sql[i++];
+          current += sql[i++];
         }
       }
       continue;
     }
-    result += sql[i++];
-  }
-
-  return result;
-}
-
-/**
- * Split SQL on semicolons, but not those inside string literals.
- *
- * @param {string} sql
- * @returns {string[]}
- */
-function splitOnSemicolons (sql) {
-  /** @type {string[]} */
-  const parts = [];
-  let current = '';
-  let inString = false;
-
-  for (let i = 0; i < sql.length; i++) {
-    const ch = /** @type {string} */ (sql[i]);
-    if (inString) {
-      current += ch;
-      if (ch === "'" && sql[i + 1] === "'") {
-        current += "'";
-        i++; // skip escaped quote
-      } else if (ch === "'") {
-        inString = false;
-      }
-    } else if (ch === "'") {
-      inString = true;
-      current += ch;
-    } else if (ch === ';') {
-      parts.push(current);
+    // Semicolon: statement boundary
+    if (sql[i] === ';') {
+      const trimmed = current.trim();
+      if (trimmed) parts.push(trimmed);
       current = '';
-    } else {
-      current += ch;
+      i++;
+      continue;
     }
+    current += sql[i++];
   }
 
-  if (current) parts.push(current);
+  const trimmed = current.trim();
+  if (trimmed) parts.push(trimmed);
+
   return parts;
-}
-
-/**
- * Split a SQL string into individual statements.
- * Handles block comments, single-line comments, and semicolons in string literals.
- * Supports all statement types (CREATE, ALTER, INSERT, GRANT, etc.).
- *
- * @param {string} sqlString
- * @returns {string[]}
- */
-function splitStatements (sqlString) {
-  const cleaned = stripComments(sqlString);
-
-  // Split on semicolons outside of string literals
-  const statements = splitOnSemicolons(cleaned);
-
-  return statements
-    .map(statement => statement.trim())
-    .filter(Boolean);
 }
 
 /**
@@ -126,5 +83,4 @@ export async function pgInstallSchemaFromString (context, createTablesString) {
   });
 }
 
-// Register this handler with the core umzeption installSchemaFromString dispatcher
 registerSchemaInstaller('pg', /** @type {any} */ (pgInstallSchemaFromString));
