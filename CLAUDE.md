@@ -20,6 +20,7 @@ Framework-agnostic modular database migrations built on [umzug](https://github.c
 - TypeScript is used **only** for type-checking (`tsc`) and `.d.ts` generation — never write `.ts` source files
 - Module format: **ESM** (`"type": "module"` everywhere). Use `import`/`export`, not `require`
 - Hand-authored type declaration files must use the naming pattern `*-types.d.ts` (e.g., `pg-types.d.ts`). The clean script deletes `*.d.ts` files but preserves `*-types.d.ts`
+- Node.js targets: `^20.19.0 || ^22.13.0 || >=24`. TypeScript: `>=5.8`
 
 ### CI Checks (all must pass)
 - `check:tsc` — TypeScript compilation
@@ -28,6 +29,17 @@ Framework-agnostic modular database migrations built on [umzug](https://github.c
 - `check:type-coverage` — strict mode, ≥99% coverage required (currently 100%)
 - `check:installed-check` — verifies package.json dependencies match actual usage
 - `test:node` — Node.js built-in test runner (`node:test`) with c8 coverage
+
+### Code Style (enforced by eslint)
+- Space before function parens: `function foo ()` not `function foo()`
+- Consistent existence checks: use `!== -1` not `>= 0` for indexOf
+- `prefer-set-has`: use `Set` instead of `Array.includes` for repeated lookups
+- `sort-destructure-keys`: destructured keys must be alphabetically sorted
+- `promise/prefer-await-to-then`: use `await` instead of `.then()/.catch()/.finally()`
+- `consistent-function-scoping`: move functions to outermost possible scope
+- `jsdoc/require-returns`: JSDoc functions with return values need `@returns`
+- `security/detect-non-literal-regexp`: warnings expected for dynamic regex (OK)
+- `n/no-process-env`: warnings expected for `process.env` access (OK)
 
 ## Architecture Patterns
 
@@ -78,6 +90,38 @@ Use these instead of bare `new Error(...)` / `new TypeError(...)` for throw site
 - Integration tests requiring a real PG instance check for `PG_*` env vars
 - Test files: `test/*.spec.js`
 - Type contract tests: `tstyche` in `typetests/*.tst.ts`
+- For intentional type mismatches in tests (e.g., testing error paths), use `/** @type {any} */` cast
+
+## Gotchas & Pitfalls
+
+### .gitignore and .d.ts files
+The `.gitignore` blanket-ignores `*.d.ts` but allows specific paths:
+- `!/packages/*/index.d.ts` — public API type entrypoints (committed)
+- `!/packages/*/lib/**/*-types.d.ts` — hand-authored types (committed)
+- Everything else `*.d.ts` is generated and gitignored
+
+If you create a new hand-authored `.d.ts`, it **must** match `*-types.d.ts` or it will be both gitignored and deleted by `scripts/clean-declarations.js`.
+
+### The `check` script runs `clean` first
+Running `npm run check` in a package starts with `run-s clean && run-p check:*`. The clean step deletes generated `.d.ts` files. This means `check` validates from a clean state — if type declarations are stale, the clean+rebuild catches it.
+
+### Cross-package test fixtures
+`packages/umzeption-pg/test/pg-integration.spec.js` imports fixtures from `../../umzeption/test/fixtures/` via relative paths. This is acknowledged tech debt (marked `todo: 'Sprint 78'`). The test uses `plugin-importer` which resolves through the package, so the fixtures must be reachable.
+
+### knip configuration
+Each package has its own `.knip.jsonc`. Key entries:
+- `entry`: must include `index.d.ts` and any `*-types.d.ts` so knip knows they're intentional
+- `ignoreBinaries`: tools invoked via `npm-run-all2` (`run-s`, `run-p`, `tsc`, etc.)
+- `ignoreDependencies`: devDeps used only via npm scripts (not imported in code)
+
+### ESLint: `n/no-unsupported-features/node-builtins`
+The `fs.glob` API (Node 22+) triggers this rule. The dynamic `import('node:fs/promises')` + `'glob' in fs` check is specifically structured to avoid the lint error while still using the feature when available.
+
+### Type coverage
+The `type-coverage` check runs in `--strict` mode at `--at-least 99`. Every untyped variable or expression counts against the score. Common fixes:
+- Add `/** @type {string[]} */` before array literals
+- Use `/** @type {any} */` for intentional catch variables
+- Add `/** @type {string} */` for class property assignments
 
 ## Related Packages
 
