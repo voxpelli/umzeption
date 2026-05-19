@@ -15,6 +15,7 @@ Two operating modes drive the rest of the design:
 ## Code map
 
 - `lib/main.js` — public entry, adapts `umzeptionLookup` for Umzug's migration provider.
+- `lib/create-umzeption.js` — public factory returning `{ umzug, installUmzug (lazy getter), runAsCLI }`. Wraps two Umzug instances sharing context + storage; only the migration list differs (install mode generates `:install` stubs). **Gotcha:** `runAsCLI` adds the `install` subcommand by **rewriting argv to `['up', ...rest]`** against the install-mode Umzug, so `install --help` prints `up`'s help and `up`-only flags (`--to`, `--step`, `--migrations`) pass through unchanged. Umzug v3's `runAsCLI` also calls `process.exit` after execution, so the returned `Promise<boolean>` is dead code in CLI use.
 - `lib/lookup.js` — orchestrates dependency load + migration resolve + install-stub construction.
 - `lib/dependencies.js` — loads dependencies via `plugin-importer`; accepts either an `umzeptionConfig` export or top-level exports.
 - `lib/resolve-migrations.js` — globs migration files per dependency, validates up/down, wraps as `RunnableMigration`. globby returns filesystem order; `sortMigrationFiles` applies a lexicographic sort for determinism (overridable via the top-level or per-dep `sortFiles` option). Hand-authored filenames must therefore sort consistently with `umzug create`'s `YYYY.MM.DDTHH.MM.SS.name.js` output format.
@@ -47,7 +48,7 @@ node --test --test-name-pattern 'should resolve' test/integration.spec.js
 
 Tests live in `test/*.spec.js`, use Node's built-in `node:test`, and use `sinon` for stubbing. Postgres integration tests stub `pg.Pool.prototype.query` — **no real database is required**. Fixtures (including miniature dependency packages) live in `test/fixtures/`.
 
-Pre-push runs `npm test`; commit-msg enforces conventional commits via husky. Releases are automated through release-please from conventional-commit history; in 0.x semver, `!:` lands as a minor bump, not major.
+Pre-push runs `npm test`; commit-msg enforces conventional commits via husky. Releases are automated through release-please from conventional-commit history; in 0.x semver, `!:` lands as a minor bump per `.github/release-please/config.json`'s `bump-minor-pre-major: true` setting — NOT a release-please default (default behaviour bumps `0.x.y + !:` to `1.0.0`).
 
 If `npm test` fails on `installed-check`, the failure surface is wider than the message suggests — it checks engine, peer-dep, and version ranges (any one `-i` flag disables the others). Start with `npm install` to sync; persistent failures usually mean `engines.node` is too loose for the combined dep tree.
 
@@ -59,5 +60,7 @@ If `npm test` fails on `installed-check`, the failure surface is wider than the 
 - When extending storage or context, mirror the `BaseUmzeptionStorage` / `UmzeptionContext` shape so non-pg backends remain possible.
 - Test fixtures (`test/fixtures/<name>/`): `index.js` exports either `umzeptionConfig` (preferred, `@satisfies UmzeptionDependency`) or top-level `glob` + `installSchema` (legacy, both supported); migrations are sinon stubs exporting `up`/`down`.
 - In `assert.rejects` callbacks, type `err` as `/** @type {any} */` — tsc otherwise treats it as `unknown`.
+- When a factory owns mode selection that callers must not override, type the inner options as `Omit<…, 'flag'>` rather than relying on a runtime override — surfaces the mistake at compile time (precedent: `CreateUmzeptionOptions.umzeption: Omit<UmzeptionLookupOptions, 'install'>`). Lock the constraint in with an `@ts-expect-error` test that passes the forbidden field; tsc errors on an unused `@ts-expect-error` directive, catching future regressions if the `Omit` is dropped.
+- When validating a user-supplied transformation callback whose contract is "permutation of input", the cheapest sound check is length-equality + membership loop + `Set(result).size === input.length` (pigeonhole, requires dup-free input). See `validateSortResult` in `lib/resolve-migrations.js`. Document the dup-free precondition if the function is exported.
 - Cross-platform tests: globby normalizes paths to forward slashes on Windows but `path.join` uses backslashes — assertions comparing whole absolute paths fail Windows-only despite local passing. Compare basenames (`path.basename(f)`) or split on `path.sep` instead.
 - `engines.node` uses specific-minor + disjunction (e.g. `^20.9.0 || >=21.1.0`), not `>=X.0.0` — matches the floor that `installed-check` computes from declared deps. After dep bumps, rerun `npx installed-check --engine-check --strict` (no `-i` flags) to see the authoritative combined floor.
