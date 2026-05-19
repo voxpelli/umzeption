@@ -14,6 +14,17 @@ import type {
 export interface UmzeptionDependency<T extends AnyUmzeptionContext = AnyUmzeptionContext> extends PluginDefinition {
   glob: string[]
   installSchema: import('umzug').MigrationFn<T>
+  /**
+   * Custom sort transformer applied to this dependency's migration file paths
+   * before they are wrapped as Umzug RunnableMigrations. Receives the absolute
+   * paths globbed from `glob`, plus `{ pluginDir }` so the prefix can be
+   * stripped when needed (e.g. for numeric or length-based comparisons).
+   *
+   * When set on a UmzeptionDependency, it wins over the top-level
+   * `sortFiles` on UmzeptionLookupOptions for that dependency only.
+   * Use `(files) => files` to opt out of sorting entirely.
+   */
+  sortFiles?: ((files: string[], context: { pluginDir: string }) => string[]) | undefined
 }
 
 // The fully resolved internal definition

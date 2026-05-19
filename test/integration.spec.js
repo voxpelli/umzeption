@@ -145,6 +145,72 @@ describe('Integration', () => {
     assert.strictEqual(installSchema.callCount, 1);
   });
 
+  it('should honour a custom sortFiles option end-to-end', async () => {
+    const context = createUmzeptionContext('unknown', 'test');
+
+    const storage = memoryStorage();
+
+    const umzug = new Umzug({
+      migrations: umzeption({
+        // Use the three-file unordered fixture so sort has visible effect.
+        glob: ['fixtures/migrations-unordered/*.js'],
+        meta: import.meta,
+        noop: true,
+        sortFiles: files => [...files].sort((a, b) => b.localeCompare(a)),
+      }),
+      context,
+      storage,
+      logger: sinon.stub(console),
+    });
+
+    await umzug.up();
+
+    const executed = await storage.executed({ context });
+
+    // ':install' is added by lookup separately and not affected by sortFiles.
+    // The three migration files appear in reverse-lexicographic order.
+    assert.deepStrictEqual(executed, [
+      ':install',
+      'c-03.js',
+      'b-02.js',
+      'a-01.js',
+    ]);
+  });
+
+  it('per-dependency sortFiles wins over top-level sortFiles', async () => {
+    const context = createUmzeptionContext('unknown', 'test');
+
+    const storage = memoryStorage();
+
+    const umzug = new Umzug({
+      migrations: umzeption({
+        // The dep below exports its own sortFiles (reverse). Top-level
+        // tries to force forward order; per-dep must still win.
+        dependencies: ['./fixtures/test-dependency-with-sort'],
+        meta: import.meta,
+        noop: true,
+        sortFiles: files => [...files].sort(),
+      }),
+      context,
+      storage,
+      logger: sinon.stub(console),
+    });
+
+    await umzug.up();
+
+    const executed = await storage.executed({ context });
+
+    // Dep's own sortFiles (reverse) wins over the top-level (forward).
+    // ':install' is the main app's stub (no glob → no migrations).
+    assert.deepStrictEqual(executed, [
+      'test-dependency-with-sort:install',
+      ':install',
+      'test-dependency-with-sort|c-03.js',
+      'test-dependency-with-sort|b-02.js',
+      'test-dependency-with-sort|a-01.js',
+    ]);
+  });
+
   it('should work without specifying top level installSchema', async () => {
     const context = createUmzeptionContext('unknown', 'test');
 

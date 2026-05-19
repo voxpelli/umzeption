@@ -37,6 +37,10 @@ const umzug = new Umzug({
     meta: import.meta,
     // Optional: Can be used instead of "meta" and if none are set, then process.cwd() is the default
     // cwd: process.cwd(),
+    // Optional: Custom sort for migration file paths. Receives absolute paths
+    // plus `{ pluginDir }` so the shared prefix can be stripped before
+    // length-aware or numeric comparisons. Defaults to lexicographic order.
+    // sortFiles: (files, { pluginDir }) => [...files].sort((a, b) => a.localeCompare(b)),
   }),
   // Other contexts can be created and plugins can support multiple contexts
   context: createUmzeptionPgContext(new pg.Pool({
@@ -74,6 +78,10 @@ Makes it easy to enforce types and keeps all Umzeption related stuff grouped tog
 export const umzeptionConfig = {
   dependencies: ['@yikesable/abc'],
   glob: ['migrations/*.js'],
+  // Optional: a dependency can declare its own sort if its filenames need
+  // special ordering (e.g. legacy non-timestamp names). Wins over the
+  // top-level `sortFiles` for this dependency only.
+  // sortFiles: (files, { pluginDir }) => [...files].sort(),
   async installSchema ({ context }) {
     if (context.type !== 'pg') {
       throw new Error(`Unsupported context type: ${context.type}`);
@@ -129,6 +137,10 @@ export const umzeptionConfig = {
   },
 };
 ```
+
+## Note on custom `sortFiles` and `umzug create`
+
+Umzug's `create` CLI command runs an `allowConfusingOrdering` safety check that assumes **lexicographic** ordering of migration filenames — it errors if the new file would sort before existing ones. If you override `sortFiles` with a non-lexicographic comparator, that check's verdict may not match your actual execution order. Either keep `sortFiles` lexicographic (just permuting equal-priority groups) or run `umzug create --allow-confusing-ordering` and verify ordering yourself.
 
 ## See also
 
