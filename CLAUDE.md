@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-**Umzeption** is a recursive extension for [Umzug](https://github.com/sequelize/umzug) that turns DB migrations into a **transitive dependency graph across npm packages**: every package can ship its own migrations and an `installSchema()`, and umzeption discovers them via [`plugin-importer`](https://github.com/voxpelli/plugin-importer), resolves them in dependency order, and hands the combined list to Umzug. This is the design's whole reason to exist — most other Node migration tools (`postgrator`, `node-pg-migrate`, `knex` migrations) operate on a single flat folder.
+**Umzeption** is a recursive extension for [Umzug](https://github.com/sequelize/umzug) that turns DB migrations into a **transitive dependency graph across npm packages**: every package can ship its own migrations and an `installSchema()`, and umzeption discovers them via [`plugin-importer`](https://github.com/voxpelli/plugin-importer), groups them per package (dependencies first, host app last), and hands the combined list to Umzug. This is the design's whole reason to exist — most other Node migration tools (`postgrator`, `node-pg-migrate`, Knex's migrations) operate on a single flat folder.
 
 Two operating modes drive the rest of the design:
 - **install**: fresh database. For each dependency, run `installSchema()` (typically full DDL), then mark every existing migration as already executed without running it.
@@ -17,7 +17,7 @@ Two operating modes drive the rest of the design:
 - `lib/main.js` — public entry, adapts `umzeptionLookup` for Umzug's migration provider.
 - `lib/lookup.js` — orchestrates dependency load + migration resolve + install-stub construction.
 - `lib/dependencies.js` — loads dependencies via `plugin-importer`; accepts either an `umzeptionConfig` export or top-level exports.
-- `lib/resolve-migrations.js` — globs migration files per dependency, validates up/down, wraps as `RunnableMigration`. **Note:** filesystem order from globby is non-deterministic; migrations are not re-sorted by Umzug here, so filenames MUST be timestamp-prefixed (`YYYYMMDDHHMMSS-name.js`) for stable ordering.
+- `lib/resolve-migrations.js` — globs migration files per dependency, validates up/down, wraps as `RunnableMigration`. globby returns filesystem order; `sortMigrationFiles` applies a lexicographic sort for determinism (overridable via the top-level or per-dep `sortFiles` option). Hand-authored filenames must therefore sort consistently with `umzug create`'s `YYYY.MM.DDTHH.MM.SS.name.js` output format.
 - `lib/storage.js` — `BaseUmzeptionStorage`, abstract `UmzugStorage` impl managing the `umzeption_migrations` table; subclasses provide `query()`.
 - `lib/context.js`, `lib/definition.js` — context factory + definition validator.
 - `lib/context-pg/` — pg-specific context (`createUmzeptionPgContext`), storage (`UmzeptionPgStorage`), and a `FastifyPostgresStyleDb` adapter with transaction support.
@@ -55,7 +55,7 @@ If `npm test` fails on `installed-check`, the failure surface is wider than the 
 
 - ESM only (`"type": "module"`, Node ≥20.0.0).
 - Style: `neostandard` via `@voxpelli/eslint-config`.
-- When adding migration discovery features, preserve the timestamp-prefix convention rather than re-introducing sort logic — consumers rely on filename ordering being authoritative.
+- When adding migration discovery features, preserve the dot-separated ISO timestamp-prefix convention (`YYYY.MM.DDTHH.MM.SS.name.js`, matching `umzug create`) and the lexicographic default sort — consumers rely on filename ordering being authoritative and on the per-dep `sortFiles` precedence rule defined in `lib/lookup.js`.
 - When extending storage or context, mirror the `BaseUmzeptionStorage` / `UmzeptionContext` shape so non-pg backends remain possible.
 - Test fixtures (`test/fixtures/<name>/`): `index.js` exports either `umzeptionConfig` (preferred, `@satisfies UmzeptionDependency`) or top-level `glob` + `installSchema` (legacy, both supported); migrations are sinon stubs exporting `up`/`down`.
 - In `assert.rejects` callbacks, type `err` as `/** @type {any} */` — tsc otherwise treats it as `unknown`.

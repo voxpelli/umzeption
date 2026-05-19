@@ -141,19 +141,18 @@ export const dependencies = ['@yikesable/abc'];
 export const glob = ['migrations/*.js'];
 /** @type {import('umzeption').UmzeptionDependency["installSchema"]} */
 export async function installSchema ({ context }) {
-    if (context.type !== 'pg') {
-      throw new Error(`Unsupported context type: ${context.type}`);
+  if (context.type !== 'pg') {
+    throw new Error(`Unsupported context type: ${context.type}`);
+  }
+
+  const tables = await getTables();
+
+  await context.value.transact(async client => {
+    for (const table of tables) {
+      await client.query(table);
     }
-
-    const tables = await getTables();
-
-    await context.value.transact(async client => {
-      for (const table of tables) {
-        await client.query(table);
-      }
-    });
-  },
-};
+  });
+}
 ```
 
 ### Using `installSchemaFromString` helper
