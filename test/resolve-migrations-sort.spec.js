@@ -127,6 +127,20 @@ describe('resolveMigrations custom sortFiles', () => {
     );
   });
 
+  it('rejects sortFiles that replaces a unique entry with a duplicate', async () => {
+    // Same length, every returned path is in the input set — but one input
+    // file is silently dropped and another runs twice. The permutation guard
+    // must catch this.
+    await assert.rejects(
+      () => resolveMigrations(definition, context, true,
+        files => [...files.slice(0, 1), ...files.slice(1, 2), ...files.slice(1, 2)]),
+      (/** @type {any} */ err) => {
+        assert.match(err.cause.message, /duplicate entries/);
+        return true;
+      }
+    );
+  });
+
   it('rejects sortFiles that synthesizes paths not in the input', async () => {
     await assert.rejects(
       () => resolveMigrations(definition, context, true, files => [...files.slice(0, 2), '/synthesized/path.js']),
@@ -208,6 +222,15 @@ describe('validateSortResult', () => {
     assert.throws(
       () => validateSortResult(input, [...input.slice(0, 2), '/bad.js'], 'example'),
       /not present in the input/
+    );
+  });
+
+  it('throws when result duplicates an input entry to replace a dropped one', () => {
+    // length matches, every entry is in inputSet — but '/a/3.js' is dropped
+    // and '/a/2.js' appears twice. The pigeonhole permutation check catches it.
+    assert.throws(
+      () => validateSortResult(input, [...input.slice(0, 1), ...input.slice(1, 2), ...input.slice(1, 2)], 'example'),
+      /duplicate entries/
     );
   });
 });
