@@ -138,6 +138,50 @@ export const umzeptionConfig = {
 };
 ```
 
+## Using the CLI
+
+Umzug ships a CLI with `create`, `up`, `down`, and `pending` subcommands. The `create` subcommand auto-generates timestamp-prefixed migration filenames and runs the `allowConfusingOrdering` safety check (warns if a new file would sort before existing migrations).
+
+Use `createUmzeptionUmzug` to wire it up in one step:
+
+```javascript
+// tools/umzug.js
+import pg from 'pg';
+import {
+  UmzeptionPgStorage,
+  createUmzeptionPgContext,
+  createUmzeptionUmzug,
+} from 'umzeption';
+
+const context = createUmzeptionPgContext(new pg.Pool({
+  allowExitOnIdle: true,
+  connectionString: process.env.DATABASE_URL,
+}));
+
+const umzug = createUmzeptionUmzug({
+  umzeption: {
+    dependencies: ['@yikesable/foo'],
+    glob: ['migrations/*.js'],
+    meta: import.meta,
+  },
+  context,
+  storage: new UmzeptionPgStorage(),
+  logger: console,
+});
+
+umzug.runAsCLI();
+```
+
+Then run:
+
+```bash
+node tools/umzug.js create --name my-migration.js   # creates a timestamp-prefixed file
+node tools/umzug.js pending                          # lists pending migrations
+node tools/umzug.js up                               # applies all pending migrations
+```
+
+Use timestamp-prefixed filenames (`YYYYMMDDHHMMSS-name.js`) when generating new migrations manually — umzeption sorts migration files lexicographically, matching umzug's own `create` output.
+
 ## Note on custom `sortFiles` and `umzug create`
 
 Umzug's `create` CLI command runs an `allowConfusingOrdering` safety check that assumes **lexicographic** ordering of migration filenames — it errors if the new file would sort before existing ones. If you override `sortFiles` with a non-lexicographic comparator, that check's verdict may not match your actual execution order. Either keep `sortFiles` lexicographic (just permuting equal-priority groups) or run `umzug create --allow-confusing-ordering` and verify ordering yourself.
