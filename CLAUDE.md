@@ -53,7 +53,7 @@ If `npm test` fails on `installed-check`, the failure surface is wider than the 
 
 ## Conventions
 
-- ESM only (`"type": "module"`, Node ≥20.0.0).
+- ESM only (`"type": "module"`, Node `^20.9.0 || >=21.1.0` — matches `@voxpelli/eslint-config`'s requirement).
 - Style: `neostandard` via `@voxpelli/eslint-config`.
 - When adding migration discovery features, preserve the dot-separated ISO timestamp-prefix convention (`YYYY.MM.DDTHH.MM.SS.name.js`, matching `umzug create`) and the lexicographic default sort — consumers rely on filename ordering being authoritative and on the per-dep `sortFiles` precedence rule defined in `lib/lookup.js`.
 - When extending storage or context, mirror the `BaseUmzeptionStorage` / `UmzeptionContext` shape so non-pg backends remain possible.
