@@ -13,6 +13,10 @@ export {
 } from './lib/main.js';
 
 export {
+  createUmzeption,
+} from './lib/create-umzeption.js';
+
+export {
   installSchemaFromString,
   pgInstallSchemaFromString,
 } from './lib/schema-helper.js';
