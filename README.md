@@ -237,6 +237,8 @@ node tools/umzug.js up                               # applies all pending migra
 
 On a fresh project with no migrations yet, `create` auto-infers its destination folder from the location of your `tools/umzug.js` (via `meta: import.meta`); pass `--folder path/to/migrations` to override. Without this default, umzug would error with "Couldn't infer a directory to generate migration file in" on the very first `create`.
 
+> **Note on `install` flags.** The `install` subcommand is implemented by translating argv to `['up', ...rest]` against the install-mode Umzug, so `umzeption install --help` prints `up`'s help and `up`-only flags (`--to`, `--step`, `--migrations`) pass through unchanged — most are nonsensical for install mode. Run `install` with no further flags in the normal case.
+
 When generating migrations manually, use filenames that match umzug's own `create` output format: `YYYY.MM.DDTHH.MM.SS.name.js` — dots throughout, e.g. `2026.05.19T14.23.45.my-migration.js`. Umzeption sorts migration files lexicographically, so hand-authored names must sort consistently with anything produced by `umzug create`.
 
 ## Notes on `sortFiles` ordering
