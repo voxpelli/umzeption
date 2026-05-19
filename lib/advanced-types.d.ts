@@ -1,7 +1,7 @@
 // @ts-ignore Ignoring to avoid strict dependency on 'pg'
 import type { Pool as PgPool, PoolClient as PgPoolClient } from 'pg';
 import type { PluginDefinition } from 'plugin-importer';
-import type { MigrationParams, UmzugStorage } from 'umzug';
+import type { MigrationParams, Umzug, UmzugStorage } from 'umzug';
 
 import type {
   AnyDeclaration,
@@ -46,6 +46,29 @@ export interface UmzeptionLookupOptions<T extends AnyUmzeptionContext> extends
   install?: boolean
   meta?: ImportMeta
   noop?: boolean
+}
+
+// *** Helper factory options + instance ***
+
+export interface CreateUmzeptionOptions<T extends AnyUmzeptionContext> {
+  umzeption: UmzeptionLookupOptions<T>
+  context: T
+  storage: UmzugStorage<T>
+  logger?: ConstructorParameters<typeof Umzug<T>>[0]['logger']
+  create?: ConstructorParameters<typeof Umzug<T>>[0]['create']
+}
+
+export interface UmzeptionInstance<T extends AnyUmzeptionContext> {
+  /** Umzug instance in upgrade mode (install: false). Use for programmatic up/down/pending. */
+  umzug: Umzug<T>
+  /**
+   * Lazily-built Umzug instance in install mode (install: true). Used by
+   * `runAsCLI('install')` and by test bootstraps such as `@voxpelli/pg-utils`'s
+   * `schema` callback (`schema: pool => buildUmzeption(pool).installUmzug`).
+   */
+  readonly installUmzug: Umzug<T>
+  /** CLI dispatcher. Adds `install` subcommand on top of Umzug's built-in commands; passes everything else straight through. */
+  runAsCLI: (argv?: string[]) => Promise<boolean>
 }
 
 // *** Storage ***

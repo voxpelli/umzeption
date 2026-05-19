@@ -13,8 +13,8 @@ export {
 } from './lib/main.js';
 
 export {
-  createUmzeptionUmzug,
-} from './lib/create-umzeption-umzug.js';
+  createUmzeption,
+} from './lib/create-umzeption.js';
 
 export {
   installSchemaFromString,

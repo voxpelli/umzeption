@@ -10,42 +10,87 @@ Umzeption is a recursive extension for [Umzug](https://github.com/sequelize/umzu
 
 ## Usage
 
-Use `createUmzeptionUmzug` to set up migrations and wire up Umzug's CLI (`up`, `down`, `pending`, `create`) in one step:
+`createUmzeption` sets up migrations once and returns a CLI runner, a programmatic Umzug instance, and an install-mode Umzug — all from a single call. The typical setup splits across three files:
+
+**`umzeption-setup.js`** — one module owns the setup:
 
 ```javascript
-// tools/umzug.js
+import { readFile } from 'node:fs/promises';
 import pg from 'pg';
 import {
   UmzeptionPgStorage,
+  createUmzeption,
   createUmzeptionPgContext,
-  createUmzeptionUmzug,
+  installSchemaFromString,
 } from 'umzeption';
 
-const umzug = createUmzeptionUmzug({
-  umzeption: {
-    dependencies: ['@yikesable/foo'],
-    glob: ['migrations/*.js'],
-    meta: import.meta,
-  },
-  context: createUmzeptionPgContext(new pg.Pool({
-    allowExitOnIdle: true,
-    connectionString: process.env.DATABASE_URL,
-  })),
-  storage: new UmzeptionPgStorage(),
-  logger: console,
-});
+export function buildUmzeption (pool) {
+  return createUmzeption({
+    umzeption: {
+      dependencies: ['@yikesable/foo'],
+      glob: ['migrations/*.js'],
+      meta: import.meta,
+      installSchema: async ({ context }) => {
+        const sql = await readFile(new URL('schema.sql', import.meta.url), 'utf8');
+        return installSchemaFromString(context, sql);
+      },
+    },
+    context: createUmzeptionPgContext(pool ?? new pg.Pool({
+      allowExitOnIdle: true,
+      connectionString: process.env.DATABASE_URL,
+    })),
+    storage: new UmzeptionPgStorage(),
+    logger: console,
+  });
+}
 
-umzug.runAsCLI();
+export const umzeption = buildUmzeption();
+```
+
+**`tools/umzug.js`** — CLI entry point, one line of logic:
+
+```javascript
+import { umzeption } from '../umzeption-setup.js';
+
+await umzeption.runAsCLI();
 ```
 
 Then run:
 
 ```bash
-node tools/umzug.js up       # applies all pending migrations
-node tools/umzug.js pending  # lists pending migrations
+node tools/umzug.js install    # fresh database: runs each package's installSchema()
+node tools/umzug.js up         # applies any pending migrations
+node tools/umzug.js pending    # lists pending migrations
+node tools/umzug.js create --name add-users.js  # generates a new migration file
 ```
 
-If you don't need the CLI — for example when running migrations programmatically at application startup — compose Umzug manually instead. The annotated example below also serves as a reference for every umzeption option:
+**`tools/test-helpers.js`** — pg-utils test bootstrap uses the install-mode Umzug directly:
+
+```javascript
+import { pgTestSetupFor } from '@voxpelli/pg-utils';
+
+import { buildUmzeption } from '../umzeption-setup.js';
+
+export const pgTestSetupConfig = {
+  connectionString: process.env.DATABASE_URL,
+  schema: pool => buildUmzeption(pool).installUmzug,
+};
+
+export async function testHelpers (t) {
+  return pgTestSetupFor(pgTestSetupConfig, t);
+}
+```
+
+`buildUmzeption(pool).installUmzug` gives [`@voxpelli/pg-utils`](https://github.com/voxpelli/pg-utils) a ready Umzug instance; pg-utils calls `.up()` on it to install the schema before each test.
+
+For programmatic use (running migrations at app startup), reach for the `umzug` property directly:
+
+```javascript
+import { umzeption } from './umzeption-setup.js';
+await umzeption.umzug.up();
+```
+
+If you need lower-level control — multiple Umzug instances, custom Umzug options, no helper at all — compose Umzug manually. The annotated example below also serves as a reference for every umzeption option:
 
 ```javascript
 import pg from 'pg';
@@ -177,14 +222,15 @@ export const umzeptionConfig = {
 
 ## Using the CLI
 
-Umzug ships a CLI with `create`, `up`, `down`, and `pending` subcommands. The `create` subcommand auto-generates timestamp-prefixed migration filenames and runs an `allowConfusingOrdering` safety check that errors if a new file would sort before existing migrations (see [Notes on `sortFiles` ordering](#notes-on-sortfiles-ordering)).
+Umzug ships a CLI with `create`, `up`, `down`, and `pending` subcommands. Umzeption layers an `install` subcommand on top — it runs each dependency's `installSchema()` and marks all existing migrations as already-executed (the "fresh database" mode). The `create` subcommand auto-generates timestamp-prefixed migration filenames and runs an `allowConfusingOrdering` safety check that errors if a new file would sort before existing migrations (see [Notes on `sortFiles` ordering](#notes-on-sortfiles-ordering)).
 
-Use `createUmzeptionUmzug` to wire it up in one step — see the [Usage](#usage) section above.
+Use `createUmzeption` to wire it up in one step — see the [Usage](#usage) section above.
 
 Then run:
 
 ```bash
-node tools/umzug.js create --name my-migration.js   # folder defaults to the location of tools/umzug.js
+node tools/umzug.js install                          # fresh database: runs installSchema() for every dependency
+node tools/umzug.js create --name my-migration.js    # folder defaults to the location of tools/umzug.js
 node tools/umzug.js pending                          # lists pending migrations
 node tools/umzug.js up                               # applies all pending migrations
 ```

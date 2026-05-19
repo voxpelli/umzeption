@@ -1,9 +1,11 @@
 export type {
   AnyUmzeptionContext,
+  CreateUmzeptionOptions,
   DefineUmzeptionContexts,
   FastifyPostgresStyleDb,
   UmzeptionContext,
   UmzeptionDependency,
+  UmzeptionInstance,
   UmzeptionLookupOptions,
   UmzeptionStorage,
 } from './lib/advanced-types.d.ts';
@@ -22,8 +24,8 @@ export {
 } from './lib/main.js';
 
 export {
-  createUmzeptionUmzug,
-} from './lib/create-umzeption-umzug.js';
+  createUmzeption,
+} from './lib/create-umzeption.js';
 
 export {
   installSchemaFromString,
