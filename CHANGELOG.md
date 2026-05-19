@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.5.0](https://github.com/voxpelli/umzeption/compare/v0.4.1...v0.5.0) (2026-05-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* Node.js 18 is no longer supported. The minimum supported version is Node.js 20.0.0. In 0.x semver this lands as a minor bump, not a major.
+
+### 🌟 Features
+
+* createUmzeption factory + install + sortFiles, drop Node 18 ([#45](https://github.com/voxpelli/umzeption/issues/45)) ([837d5fc](https://github.com/voxpelli/umzeption/commit/837d5fcaa500e536a0a94da42bc9a94956541648))
+
 ## [0.4.1](https://github.com/voxpelli/umzeption/compare/v0.4.0...v0.4.1) (2024-12-01)
 
 
