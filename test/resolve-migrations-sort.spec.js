@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { resolveMigrations } from '../lib/resolve-migrations.js';
+import { resolveMigrations, validateSortResult } from '../lib/resolve-migrations.js';
 
 const fixturesDir = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -81,6 +81,75 @@ describe('resolveMigrations custom sortFiles', () => {
     );
   });
 
+  it('rejects sortFiles that returns undefined', async () => {
+    await assert.rejects(
+      // eslint-disable-next-line unicorn/no-useless-undefined
+      () => resolveMigrations(definition, context, true, () => /** @type {any} */ (undefined)),
+      (/** @type {any} */ err) => {
+        assert.match(err.message, /Failed to resolve migrations for "unordered"/);
+        assert.ok(err.cause instanceof TypeError);
+        assert.match(err.cause.message, /unordered/);
+        assert.match(err.cause.message, /must return an array/);
+        return true;
+      }
+    );
+  });
+
+  it('rejects sortFiles that returns a non-array', async () => {
+    await assert.rejects(
+      () => resolveMigrations(definition, context, true, () => /** @type {any} */ ('oops')),
+      (/** @type {any} */ err) => {
+        assert.ok(err.cause instanceof TypeError);
+        assert.match(err.cause.message, /must return an array/);
+        assert.match(err.cause.message, /got string/);
+        return true;
+      }
+    );
+  });
+
+  it('rejects sortFiles that drops files (returns shorter array)', async () => {
+    await assert.rejects(
+      () => resolveMigrations(definition, context, true, files => files.slice(0, 1)),
+      (/** @type {any} */ err) => {
+        assert.match(err.cause.message, /returned 1 file\(s\) but received 3/);
+        return true;
+      }
+    );
+  });
+
+  it('rejects sortFiles that duplicates files (returns longer array)', async () => {
+    await assert.rejects(
+      () => resolveMigrations(definition, context, true, files => [...files, ...files]),
+      (/** @type {any} */ err) => {
+        assert.match(err.cause.message, /returned 6 file\(s\) but received 3/);
+        return true;
+      }
+    );
+  });
+
+  it('rejects sortFiles that synthesizes paths not in the input', async () => {
+    await assert.rejects(
+      () => resolveMigrations(definition, context, true, files => [...files.slice(0, 2), '/synthesized/path.js']),
+      (/** @type {any} */ err) => {
+        assert.match(err.cause.message, /not present in the input/);
+        assert.match(err.cause.message, /synthesized\/path\.js/);
+        return true;
+      }
+    );
+  });
+
+  it('wraps a synchronously-throwing sortFiles with the standard error', async () => {
+    await assert.rejects(
+      () => resolveMigrations(definition, context, true, () => { throw new RangeError('boom'); }),
+      (/** @type {any} */ err) => {
+        assert.match(err.message, /Failed to resolve migrations for "unordered"/);
+        assert.ok(err.cause instanceof RangeError);
+        assert.strictEqual(err.cause.message, 'boom');
+        return true;
+      }
+    );
+  });
+
   it('passes the pluginDir context arg to the sort function', async () => {
     /** @type {Array<{ files: string[], context: { pluginDir: string } }>} */
     const invocations = [];
@@ -102,5 +171,41 @@ describe('resolveMigrations custom sortFiles', () => {
     for (const file of invocations[0]?.files ?? []) {
       assert.ok(file.startsWith(fixturesDir), `expected ${file} to start with ${fixturesDir}`);
     }
+  });
+});
+
+describe('validateSortResult', () => {
+  const input = ['/a/1.js', '/a/2.js', '/a/3.js'];
+
+  it('returns the array unchanged when it is a valid permutation', () => {
+    const result = [...input].reverse();
+    assert.strictEqual(validateSortResult(input, result, 'example'), result);
+  });
+
+  it('throws TypeError when result is not an array', () => {
+    assert.throws(
+      // eslint-disable-next-line unicorn/no-null
+      () => validateSortResult(input, /** @type {any} */ (null), 'example'),
+      (/** @type {any} */ err) => {
+        assert.ok(err instanceof TypeError);
+        assert.match(err.message, /example/);
+        assert.match(err.message, /must return an array/);
+        return true;
+      }
+    );
+  });
+
+  it('throws when result has wrong length', () => {
+    assert.throws(
+      () => validateSortResult(input, input.slice(0, 2), 'example'),
+      /returned 2 file\(s\) but received 3/
+    );
+  });
+
+  it('throws when result contains a path not in the input', () => {
+    assert.throws(
+      () => validateSortResult(input, [...input.slice(0, 2), '/bad.js'], 'example'),
+      /not present in the input/
+    );
   });
 });

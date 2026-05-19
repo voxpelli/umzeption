@@ -246,3 +246,59 @@ describe('Integration', () => {
     );
   });
 });
+
+/**
+ * @param {unknown} sortFiles
+ * @returns {Promise<unknown>}
+ */
+function buildUmzeptionWithSort (sortFiles) {
+  const context = createUmzeptionContext('unknown', 'test');
+  return umzeption({
+    glob: [],
+    meta: import.meta,
+    // @ts-expect-error intentional bad value to verify runtime guard
+    sortFiles,
+  })(context);
+}
+
+describe('sortFiles validation', () => {
+  it('rejects null top-level sortFiles', async () => {
+    await assert.rejects(
+      // eslint-disable-next-line unicorn/no-null
+      () => buildUmzeptionWithSort(null),
+      (/** @type {any} */ err) => {
+        assert.ok(err instanceof TypeError);
+        assert.match(err.message, /sortFiles option must be a function or undefined/);
+        assert.match(err.message, /got object/);
+        return true;
+      }
+    );
+  });
+
+  it('rejects false top-level sortFiles', async () => {
+    await assert.rejects(
+      () => buildUmzeptionWithSort(false),
+      (/** @type {any} */ err) => {
+        assert.ok(err instanceof TypeError);
+        assert.match(err.message, /got boolean/);
+        return true;
+      }
+    );
+  });
+
+  it('rejects a string top-level sortFiles', async () => {
+    await assert.rejects(
+      () => buildUmzeptionWithSort('sort-by-name'),
+      (/** @type {any} */ err) => {
+        assert.ok(err instanceof TypeError);
+        assert.match(err.message, /got string/);
+        return true;
+      }
+    );
+  });
+
+  it('accepts undefined top-level sortFiles (falls to default)', async () => {
+    // eslint-disable-next-line unicorn/no-useless-undefined
+    await assert.doesNotReject(() => buildUmzeptionWithSort(undefined));
+  });
+});
