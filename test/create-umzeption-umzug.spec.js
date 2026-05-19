@@ -93,4 +93,52 @@ describe('createUmzeptionUmzug', () => {
       '/explicit/override'
     );
   });
+
+  it('caller-supplied create.folder=undefined falls back to the inferred default', () => {
+    const context = createUmzeptionContext('unknown', 'test');
+
+    const umzug = createUmzeptionUmzug({
+      umzeption: { glob: [], meta: import.meta },
+      context,
+      storage: memoryStorage(),
+      // Naive spread-merge (`{ folder: default, ...create }`) would set
+      // folder=undefined here and re-introduce umzug's "Couldn't infer
+      // a directory" error. The helper must guard against this. The cast
+      // bypasses exactOptionalPropertyTypes to actually exercise the
+      // runtime footgun a real caller could trigger by forwarding an
+      // optional CLI arg.
+      create: /** @type {any} */ ({ folder: undefined }),
+    });
+
+    assert.strictEqual(
+      /** @type {any} */ (umzug).options.create.folder,
+      testDir
+    );
+  });
+
+  it('wraps fileURLToPath errors with actionable context when meta.url is not a file URL', () => {
+    const context = createUmzeptionContext('unknown', 'test');
+
+    assert.throws(
+      () => createUmzeptionUmzug({
+        umzeption: {
+          glob: [],
+          // Non-file URL — fileURLToPath throws ERR_INVALID_URL_SCHEME.
+          // The helper must wrap that with a message that names the option
+          // and tells the consumer how to recover.
+          meta: /** @type {any} */ ({ url: 'https://example.com/tools/umzug.js' }),
+        },
+        context,
+        storage: memoryStorage(),
+      }),
+      (/** @type {any} */ err) => {
+        assert.match(err.message, /createUmzeptionUmzug/);
+        assert.match(err.message, /could not derive folder from meta\.url/);
+        assert.match(err.message, /https:\/\/example\.com/);
+        assert.match(err.message, /pass umzeption\.cwd or create\.folder explicitly/);
+        assert.ok(err.cause, 'expected cause chain preserved');
+        return true;
+      }
+    );
+  });
 });
