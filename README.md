@@ -1,15 +1,51 @@
 # Umzeption
 
-A recursive [Umzug](https://github.com/sequelize/umzug) extension with migration-less installs
+Each npm package can ship its own DB migrations and schema. Umzeption discovers them across your dependency tree, groups them per package (dependencies first, host app last), and hands the combined list to [Umzug](https://github.com/sequelize/umzug). On a fresh database it runs each package's `installSchema()` and marks the migrations as already applied; on an existing database it runs only the pending ones. If your project is a single-package app with one migrations folder, use `postgrator`, Knex's migrations, or plain Umzug instead — umzeption earns its keep when multiple packages each bring schema that must compose.
 
 [![npm version](https://img.shields.io/npm/v/umzeption.svg?style=flat)](https://www.npmjs.com/package/umzeption)
 [![npm downloads](https://img.shields.io/npm/dm/umzeption.svg?style=flat)](https://www.npmjs.com/package/umzeption)
 [![neostandard javascript style](https://img.shields.io/badge/code_style-neostandard-7fffff?style=flat&labelColor=ff80ff)](https://github.com/neostandard/neostandard)
 [![Module type: ESM](https://img.shields.io/badge/module%20type-esm-brightgreen)](https://github.com/voxpelli/badges-cjs-esm)
 [![Types in JS](https://img.shields.io/badge/types_in_js-yes-brightgreen)](https://github.com/voxpelli/types-in-js)
-[![Follow @voxpelli@mastodon.social](https://img.shields.io/mastodon/follow/109247025527949675?domain=https%3A%2F%2Fmastodon.social&style=social)](https://mastodon.social/@voxpelli)
 
 ## Usage
+
+Use `createUmzeptionUmzug` to set up migrations and wire up Umzug's CLI (`up`, `down`, `pending`, `create`) in one step:
+
+```javascript
+// tools/umzug.js
+import pg from 'pg';
+import {
+  UmzeptionPgStorage,
+  createUmzeptionPgContext,
+  createUmzeptionUmzug,
+} from 'umzeption';
+
+const umzug = createUmzeptionUmzug({
+  umzeption: {
+    dependencies: ['@yikesable/foo'],
+    glob: ['migrations/*.js'],
+    meta: import.meta,
+  },
+  context: createUmzeptionPgContext(new pg.Pool({
+    allowExitOnIdle: true,
+    connectionString: process.env.DATABASE_URL,
+  })),
+  storage: new UmzeptionPgStorage(),
+  logger: console,
+});
+
+umzug.runAsCLI();
+```
+
+Then run:
+
+```bash
+node tools/umzug.js up       # applies all pending migrations
+node tools/umzug.js pending  # lists pending migrations
+```
+
+If you don't need the CLI — for example when running migrations programmatically at application startup — compose Umzug manually instead. The annotated example below also serves as a reference for every umzeption option:
 
 ```javascript
 import pg from 'pg';
@@ -29,8 +65,8 @@ const umzug = new Umzug({
     ],
     // Optional: Which migrations do we have ourselves?
     glob: ['migrations/*.js'],
-    // Optional: Which migrations do we have ourselves?
-    async installSchema ({ context: queryInterface }) {},
+    // Optional: Sets up this package's schema on fresh installs (when install: true is set)
+    async installSchema ({ context }) {},
     // Optional: Set to true if it should be a fresh install rather than a migration
     install: true,
     // Optional: Used to inform where to resolve "glob" from
@@ -42,17 +78,15 @@ const umzug = new Umzug({
     // length-aware or numeric comparisons. Defaults to lexicographic order.
     // sortFiles: (files, { pluginDir }) => [...files].sort((a, b) => a.localeCompare(b)),
   }),
-  // Other contexts can be created and plugins can support multiple contexts
   context: createUmzeptionPgContext(new pg.Pool({
     allowExitOnIdle: true,
     connectionString: '...',
   })),
-  // Any type of storage can be used, but UmzeptionStorage  ones re-use the context's connection + ensures a match with the context types
   storage: new UmzeptionPgStorage(),
   logger: console,
 });
 
-umzug.up();
+await umzug.up();
 ```
 
 ## Concept
@@ -100,6 +134,8 @@ export const umzeptionConfig = {
 
 ### Through top level exports
 
+Alternative to `umzeptionConfig` when you prefer named exports over a config object. Each export must be typed individually (vs `umzeptionConfig`'s single `@satisfies UmzeptionDependency` annotation), as the example below shows on its `installSchema` typedef.
+
 ```javascript
 export const dependencies = ['@yikesable/abc'];
 export const glob = ['migrations/*.js'];
@@ -122,6 +158,8 @@ export async function installSchema ({ context }) {
 
 ### Using `installSchemaFromString` helper
 
+Use this helper when your schema is a string of `CREATE` statements (e.g. loaded from a `.sql` file); non-`CREATE` DDL (`ALTER TABLE`, `DO $$`, etc.) must use `context.value.transact` directly.
+
 ```javascript
 import { readFile } from 'node:fs/promises';
 
@@ -142,35 +180,7 @@ export const umzeptionConfig = {
 
 Umzug ships a CLI with `create`, `up`, `down`, and `pending` subcommands. The `create` subcommand auto-generates timestamp-prefixed migration filenames and runs an `allowConfusingOrdering` safety check that errors if a new file would sort before existing migrations (see [Note on custom `sortFiles` and `umzug create`](#note-on-custom-sortfiles-and-umzug-create)).
 
-Use `createUmzeptionUmzug` to wire it up in one step:
-
-```javascript
-// tools/umzug.js
-import pg from 'pg';
-import {
-  UmzeptionPgStorage,
-  createUmzeptionPgContext,
-  createUmzeptionUmzug,
-} from 'umzeption';
-
-const context = createUmzeptionPgContext(new pg.Pool({
-  allowExitOnIdle: true,
-  connectionString: process.env.DATABASE_URL,
-}));
-
-const umzug = createUmzeptionUmzug({
-  umzeption: {
-    dependencies: ['@yikesable/foo'],
-    glob: ['migrations/*.js'],
-    meta: import.meta,
-  },
-  context,
-  storage: new UmzeptionPgStorage(),
-  logger: console,
-});
-
-umzug.runAsCLI();
-```
+Use `createUmzeptionUmzug` to wire it up in one step — see the [Usage](#usage) section above.
 
 Then run:
 
