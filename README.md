@@ -140,7 +140,7 @@ export const umzeptionConfig = {
 
 ## Using the CLI
 
-Umzug ships a CLI with `create`, `up`, `down`, and `pending` subcommands. The `create` subcommand auto-generates timestamp-prefixed migration filenames and runs the `allowConfusingOrdering` safety check (warns if a new file would sort before existing migrations).
+Umzug ships a CLI with `create`, `up`, `down`, and `pending` subcommands. The `create` subcommand auto-generates timestamp-prefixed migration filenames and runs an `allowConfusingOrdering` safety check that errors if a new file would sort before existing migrations (see [Note on custom `sortFiles` and `umzug create`](#note-on-custom-sortfiles-and-umzug-create)).
 
 Use `createUmzeptionUmzug` to wire it up in one step:
 
@@ -180,7 +180,7 @@ node tools/umzug.js pending                          # lists pending migrations
 node tools/umzug.js up                               # applies all pending migrations
 ```
 
-Use timestamp-prefixed filenames (`YYYYMMDDHHMMSS-name.js`) when generating new migrations manually — umzeption sorts migration files lexicographically, matching umzug's own `create` output.
+When generating migrations manually, use filenames that match umzug's own `create` output format: `YYYY.MM.DDTHH.MM.SS.name.js` — dots throughout, e.g. `2026.05.19T14.23.45.my-migration.js`. Umzeption sorts migration files lexicographically, so hand-authored names must sort consistently with anything produced by `umzug create`.
 
 ## Note on custom `sortFiles` and `umzug create`
 

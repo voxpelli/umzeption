@@ -23,6 +23,9 @@ export interface UmzeptionDependency<T extends AnyUmzeptionContext = AnyUmzeptio
    * When set on a UmzeptionDependency, it wins over the top-level
    * `sortFiles` on UmzeptionLookupOptions for that dependency only.
    * Use `(files) => files` to opt out of sorting entirely.
+   *
+   * @see README — "Note on custom sortFiles and umzug create" for the
+   *   allowConfusingOrdering interaction when using a non-lexicographic sort.
    */
   sortFiles?: ((files: string[], context: { pluginDir: string }) => string[]) | undefined
 }

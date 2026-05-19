@@ -43,6 +43,10 @@ describe('createUmzeptionUmzug', () => {
     /** @type {Array<{ name: string }>} */
     const pending = await umzug.pending();
 
+    // The fixture filenames already happen to be in lexicographic order, so
+    // this assertion validates the wiring (lookup → resolveMigrations → Umzug)
+    // and the default sort stability. Non-trivial sort behavior is covered in
+    // resolve-migrations-sort.spec.js.
     assert.deepStrictEqual(
       pending.map(m => m.name),
       [
