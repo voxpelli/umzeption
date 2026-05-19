@@ -167,10 +167,12 @@ describe('resolveMigrations custom sortFiles', () => {
     assert.strictEqual(invocations.length, 1);
     assert.strictEqual(invocations[0]?.context.pluginDir, fixturesDir);
     assert.strictEqual(invocations[0]?.files.length, 3);
-    // The files are absolute paths within fixturesDir
-    for (const file of invocations[0]?.files ?? []) {
-      assert.ok(file.startsWith(fixturesDir), `expected ${file} to start with ${fixturesDir}`);
-    }
+    // Verify the right files were passed without depending on path-separator
+    // shape (globby normalizes to forward slashes on Windows; path.join uses
+    // backslashes — so a string startsWith check on the absolute path fails
+    // cross-platform).
+    const basenames = (invocations[0]?.files ?? []).map(f => path.basename(f)).sort();
+    assert.deepStrictEqual(basenames, ['a-01.js', 'b-02.js', 'c-03.js']);
   });
 });
 
