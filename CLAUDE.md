@@ -30,7 +30,7 @@ This project is **JavaScript with JSDoc**, type-checked by `tsc` but never compi
 
 `type-coverage` enforces ≥99% strict coverage (test files excluded). Prefer `unknown` + type guards over `any`.
 
-`index.d.ts` is hand-maintained — mirror every `index.js` export there or `tsc` will fail. Fields added to `UmzeptionDependency` flow into `UmzeptionDefinition` and `UmzeptionLookupOptions` via `extends` + `PartialKeys` — one declaration covers all three consumers.
+`index.d.ts` is hand-maintained — mirror every `index.js` export there or `tsc` will fail. Fields added to `UmzeptionDependency` flow into `UmzeptionDefinition` and `UmzeptionLookupOptions` via `extends` + `PartialKeys` — one declaration covers all three consumers. For JS-side `@param` / `@type` annotations needing types from `lib/advanced-types.d.ts`, prefer **indexed access** (e.g. `UmzeptionDependency['sortFiles']`) over inline function-type literals or named callback aliases — precedents in `storage.js`, `create-umzeption-umzug.js`, `definition.js`, `resolve-migrations.js`. When a file references ≥2 names from the same module, hoist via `/** @import { Foo, Bar } from './advanced-types.d.ts' */` after the runtime imports; single references can stay inline. Use the `.d.ts` specifier for type-only imports.
 
 ## Commands
 
@@ -59,3 +59,5 @@ If `npm test` fails on `installed-check`, the failure surface is wider than the 
 - When extending storage or context, mirror the `BaseUmzeptionStorage` / `UmzeptionContext` shape so non-pg backends remain possible.
 - Test fixtures (`test/fixtures/<name>/`): `index.js` exports either `umzeptionConfig` (preferred, `@satisfies UmzeptionDependency`) or top-level `glob` + `installSchema` (legacy, both supported); migrations are sinon stubs exporting `up`/`down`.
 - In `assert.rejects` callbacks, type `err` as `/** @type {any} */` — tsc otherwise treats it as `unknown`.
+- Cross-platform tests: globby normalizes paths to forward slashes on Windows but `path.join` uses backslashes — assertions comparing whole absolute paths fail Windows-only despite local passing. Compare basenames (`path.basename(f)`) or split on `path.sep` instead.
+- `engines.node` uses specific-minor + disjunction (e.g. `^20.9.0 || >=21.1.0`), not `>=X.0.0` — matches the floor that `installed-check` computes from declared deps. After dep bumps, rerun `npx installed-check --engine-check --strict` (no `-i` flags) to see the authoritative combined floor.
