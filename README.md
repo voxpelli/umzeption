@@ -1,6 +1,6 @@
 # Umzeption
 
-Each npm package can ship its own DB migrations and schema. Umzeption discovers them across your dependency tree, groups them per package (dependencies first, host app last), and hands the combined list to [Umzug](https://github.com/sequelize/umzug). On a fresh database it runs each package's `installSchema()` and marks the migrations as already applied; on an existing database it runs only the pending ones. If your project is a single-package app with one migrations folder, use `postgrator`, Knex's migrations, or plain Umzug instead — umzeption earns its keep when multiple packages each bring schema that must compose.
+Umzeption is a recursive extension for [Umzug](https://github.com/sequelize/umzug). Every npm package in your dependency tree — including the host app itself — can ship its own DB migrations and an `installSchema()`; Umzeption discovers them, groups them per package (dependencies first, host app last), and runs them through Umzug. Fresh databases install each schema and mark migrations as applied; existing databases run only what's pending.
 
 [![npm version](https://img.shields.io/npm/v/umzeption.svg?style=flat)](https://www.npmjs.com/package/umzeption)
 [![npm downloads](https://img.shields.io/npm/dm/umzeption.svg?style=flat)](https://www.npmjs.com/package/umzeption)
