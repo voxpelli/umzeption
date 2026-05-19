@@ -175,10 +175,12 @@ umzug.runAsCLI();
 Then run:
 
 ```bash
-node tools/umzug.js create --name my-migration.js   # creates a timestamp-prefixed file
+node tools/umzug.js create --name my-migration.js   # folder defaults to the location of tools/umzug.js
 node tools/umzug.js pending                          # lists pending migrations
 node tools/umzug.js up                               # applies all pending migrations
 ```
+
+On a fresh project with no migrations yet, `create` auto-infers its destination folder from the location of your `tools/umzug.js` (via `meta: import.meta`); pass `--folder path/to/migrations` to override. Without this default, umzug would error with "Couldn't infer a directory to generate migration file in" on the very first `create`.
 
 When generating migrations manually, use filenames that match umzug's own `create` output format: `YYYY.MM.DDTHH.MM.SS.name.js` — dots throughout, e.g. `2026.05.19T14.23.45.my-migration.js`. Umzeption sorts migration files lexicographically, so hand-authored names must sort consistently with anything produced by `umzug create`.
 

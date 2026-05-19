@@ -1,11 +1,15 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import sinon from 'sinon';
 
 import { Umzug, memoryStorage } from 'umzug';
 
 import { createUmzeptionContext, createUmzeptionUmzug } from '../index.js';
+
+const testDir = path.dirname(fileURLToPath(import.meta.url));
 
 describe('createUmzeptionUmzug', () => {
   it('returns a configured Umzug instance', () => {
@@ -55,6 +59,38 @@ describe('createUmzeptionUmzug', () => {
         'b-02.js',
         'c-03.js',
       ]
+    );
+  });
+
+  it('defaults create.folder to the directory of options.umzeption.meta', () => {
+    const context = createUmzeptionContext('unknown', 'test');
+
+    const umzug = createUmzeptionUmzug({
+      umzeption: { glob: [], meta: import.meta },
+      context,
+      storage: memoryStorage(),
+    });
+
+    assert.strictEqual(
+      /** @type {any} */ (umzug).options.create.folder,
+      testDir,
+      'expected create.folder to default to the directory containing import.meta.url'
+    );
+  });
+
+  it('caller-supplied create.folder overrides the default', () => {
+    const context = createUmzeptionContext('unknown', 'test');
+
+    const umzug = createUmzeptionUmzug({
+      umzeption: { glob: [], meta: import.meta },
+      context,
+      storage: memoryStorage(),
+      create: { folder: '/explicit/override' },
+    });
+
+    assert.strictEqual(
+      /** @type {any} */ (umzug).options.create.folder,
+      '/explicit/override'
     );
   });
 });
