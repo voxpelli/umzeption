@@ -177,7 +177,7 @@ export const umzeptionConfig = {
 
 ## Using the CLI
 
-Umzug ships a CLI with `create`, `up`, `down`, and `pending` subcommands. The `create` subcommand auto-generates timestamp-prefixed migration filenames and runs an `allowConfusingOrdering` safety check that errors if a new file would sort before existing migrations (see [Note on custom `sortFiles` and `umzug create`](#note-on-custom-sortfiles-and-umzug-create)).
+Umzug ships a CLI with `create`, `up`, `down`, and `pending` subcommands. The `create` subcommand auto-generates timestamp-prefixed migration filenames and runs an `allowConfusingOrdering` safety check that errors if a new file would sort before existing migrations (see [Notes on `sortFiles` ordering](#notes-on-sortfiles-ordering)).
 
 Use `createUmzeptionUmzug` to wire it up in one step — see the [Usage](#usage) section above.
 
@@ -193,9 +193,11 @@ On a fresh project with no migrations yet, `create` auto-infers its destination 
 
 When generating migrations manually, use filenames that match umzug's own `create` output format: `YYYY.MM.DDTHH.MM.SS.name.js` — dots throughout, e.g. `2026.05.19T14.23.45.my-migration.js`. Umzeption sorts migration files lexicographically, so hand-authored names must sort consistently with anything produced by `umzug create`.
 
-## Note on custom `sortFiles` and `umzug create`
+## Notes on `sortFiles` ordering
 
 Umzug's `create` CLI command runs an `allowConfusingOrdering` safety check that assumes **lexicographic** ordering of migration filenames — it errors if the new file would sort before existing ones. If you override `sortFiles` with a non-lexicographic comparator, that check's verdict may not match your actual execution order. Either keep `sortFiles` lexicographic (just permuting equal-priority groups) or run `umzug create --allow-confusing-ordering` and verify ordering yourself.
+
+**Upgrading from a pre-sort version (umzeption ≤ 0.4.x):** earlier releases returned migration files in whatever order globby provided — typically close to lexicographic on Linux/macOS but never guaranteed. The new default lexicographic sort can therefore reorder *pending* migrations on upgrade (already-applied migrations are unaffected; Umzug skips them by name regardless of candidate-list order). The narrow failure shape is unpadded numeric filenames: `1.js, 2.js, 10.js` now sort as `1, 10, 2`, so migration `10` would run before `2`. If you have pending migrations matching that pattern, either rename to zero-padded (`01.js, 02.js, 10.js`) or timestamp-prefixed names, or pass `sortFiles: files => files` to opt out and preserve the prior filesystem-order behavior.
 
 ## See also
 
