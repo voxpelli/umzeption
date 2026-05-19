@@ -81,8 +81,8 @@ export interface UmzeptionContext<T extends UmzeptionContextTypes, V>
 
 // TODO: Extract pg context into a "umzeption-pg" module
 
-type FastifyPostgresStyleTransactCallback = (client: PgPoolClient) => void;
-type FastifyPostgresStyleTransact = (callback: FastifyPostgresStyleTransactCallback) => void;
+type FastifyPostgresStyleTransactCallback = (client: PgPoolClient) => void | Promise<void>;
+type FastifyPostgresStyleTransact = (callback: FastifyPostgresStyleTransactCallback) => Promise<void>;
 
 export type FastifyPostgresStyleDb = {
   pool: PgPool;
