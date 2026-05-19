@@ -51,7 +51,12 @@ export interface UmzeptionLookupOptions<T extends AnyUmzeptionContext> extends
 // *** Helper factory options + instance ***
 
 export interface CreateUmzeptionOptions<T extends AnyUmzeptionContext> {
-  umzeption: UmzeptionLookupOptions<T>
+  // `install` is omitted because the factory owns both modes (upgrade and
+  // install-mode Umzug instances) and routes via `runAsCLI('install')` /
+  // `instance.installUmzug`. A caller-supplied `install` flag would be
+  // silently overridden at runtime; omitting it surfaces the mistake at
+  // compile time instead.
+  umzeption: Omit<UmzeptionLookupOptions<T>, 'install'>
   context: T
   storage: UmzugStorage<T>
   logger?: ConstructorParameters<typeof Umzug<T>>[0]['logger']
@@ -63,8 +68,8 @@ export interface UmzeptionInstance<T extends AnyUmzeptionContext> {
   umzug: Umzug<T>
   /**
    * Lazily-built Umzug instance in install mode (install: true). Used by
-   * `runAsCLI('install')` and by test bootstraps such as `@voxpelli/pg-utils`'s
-   * `schema` callback (`schema: pool => buildUmzeption(pool).installUmzug`).
+   * `runAsCLI('install')`; also useful for test bootstraps that need a
+   * ready install-mode Umzug. See README for integration recipes.
    */
   readonly installUmzug: Umzug<T>
   /** CLI dispatcher. Adds `install` subcommand on top of Umzug's built-in commands; passes everything else straight through. */
