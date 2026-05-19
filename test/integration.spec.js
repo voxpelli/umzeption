@@ -301,4 +301,24 @@ describe('sortFiles validation', () => {
     // eslint-disable-next-line unicorn/no-useless-undefined
     await assert.doesNotReject(() => buildUmzeptionWithSort(undefined));
   });
+
+  it('rejects a non-function per-dependency sortFiles with the dep name in the message', async () => {
+    // Stub plugin-importer's resolver indirectly by routing a bad sortFiles
+    // through the dependency loading path. We inject the dep definition
+    // directly via the `dependencies` option, which exercises lookup.js's
+    // per-dep guard at line ~78.
+    const context = createUmzeptionContext('unknown', 'test');
+    await assert.rejects(
+      () => umzeption({
+        dependencies: ['./fixtures/test-dependency-with-bad-sort'],
+        meta: import.meta,
+      })(context),
+      (/** @type {any} */ err) => {
+        assert.ok(err instanceof TypeError);
+        assert.match(err.message, /sortFiles for dependency "test-dependency-with-bad-sort"/);
+        assert.match(err.message, /got number/);
+        return true;
+      }
+    );
+  });
 });

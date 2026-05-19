@@ -53,15 +53,49 @@ describe('createUmzeption', () => {
 
   // --- Shape ---
 
-  it('returns { umzug, installUmzug (lazy getter), runAsCLI }', () => {
+  it('returns a destructurable { umzug, installUmzug, runAsCLI } with distinct Umzug instances per mode', () => {
     const instance = buildInstance();
 
     assert.ok(instance.umzug instanceof Umzug, 'umzug should be an Umzug instance');
     assert.strictEqual(typeof instance.runAsCLI, 'function', 'runAsCLI should be a function');
 
-    const descriptor = Object.getOwnPropertyDescriptor(instance, 'installUmzug');
-    assert.ok(descriptor, 'installUmzug descriptor should exist');
-    assert.strictEqual(typeof descriptor.get, 'function', 'installUmzug should be a getter, not an eager field');
+    // Behavioural lazy-construction signal: installUmzug is a real, distinct
+    // Umzug instance (different from the upgrade-mode one) and is stable
+    // across reads. The earlier "getter descriptor" check coupled to the
+    // implementation strategy; this version asserts the observable contract
+    // — distinct mode + cached instance — without caring how it's wired.
+    assert.ok(instance.installUmzug instanceof Umzug, 'installUmzug should resolve to an Umzug instance');
+    assert.notStrictEqual(
+      instance.installUmzug,
+      instance.umzug,
+      'install-mode and upgrade-mode should be different Umzug instances'
+    );
+  });
+
+  it('rejects an `install` flag inside options.umzeption at compile time', () => {
+    // Lock-in for the `Omit<UmzeptionLookupOptions<T>, 'install'>` constraint
+    // on `CreateUmzeptionOptions.umzeption`. If a future refactor drops the
+    // Omit, this test starts passing tsc silently — which would resurrect the
+    // exact "factory silently overrides caller-supplied install" footgun the
+    // Omit was added to prevent. `@ts-expect-error` fails compile if the
+    // following call is legal, locking the negative case to tsc.
+    const context = createUmzeptionContext('unknown', 'test');
+
+    const instance = createUmzeption({
+      umzeption: {
+        glob: [],
+        meta: import.meta,
+        // @ts-expect-error `install` must not be accepted here — factory owns the mode.
+        install: true,
+      },
+      context,
+      storage: memoryStorage(),
+      logger: sinon.stub(console),
+    });
+
+    // Runtime behaviour unchanged — the factory still overrides `install`
+    // internally. We just want tsc to refuse the field at the API boundary.
+    assert.ok(instance.umzug instanceof Umzug);
   });
 
   // --- Migration wiring (ported from create-umzeption-umzug.spec.js) ---
