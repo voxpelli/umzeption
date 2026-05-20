@@ -1,22 +1,17 @@
-import { describe, it, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { afterEach, describe, it } from 'node:test';
 
 import sinon from 'sinon';
-
-import { Umzug, memoryStorage } from 'umzug';
+import { memoryStorage, Umzug } from 'umzug';
 
 import { createUmzeptionContext, umzeption } from '../index.js';
-
 import { down as downMain, up as upMain } from './fixtures/migrations/foo-01.js';
-
-import { installSchema as installSchemaTestDependency } from './fixtures/test-dependency/index.js';
-import { down as downTestDependency, up as upTestDependency } from './fixtures/test-dependency/migrations/foo-01.js';
-
 import { installSchema as installSchemaTestDependency2 } from './fixtures/test-dependency-2/index.js';
 import { down as downTestDependency2, up as upTestDependency2 } from './fixtures/test-dependency-2/migrations/bar-01.js';
-
 import { umzeptionConfig as umzeptionConfigTestDependency3 } from './fixtures/test-dependency-3/index.js';
 import { down as downTestDependency3, up as upTestDependency3 } from './fixtures/test-dependency-3/migrations/abc-01.js';
+import { installSchema as installSchemaTestDependency } from './fixtures/test-dependency/index.js';
+import { down as downTestDependency, up as upTestDependency } from './fixtures/test-dependency/migrations/foo-01.js';
 
 function getDependencyStubCallCount ({
   down = 0,

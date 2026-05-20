@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'tstyche';
 
+import {
+  createUmzeptionPgContext,
+  pgInstallSchemaFromString,
+  UmzeptionPgStorage,
+  withAdvisoryLock,
+} from '../index.js';
+
 import type { UmzeptionStorage } from 'umzeption';
 
 import type {
   FastifyPostgresStyleDb,
   UmzeptionPgContext,
 } from '../index.d.ts';
-
-import {
-  createUmzeptionPgContext,
-  pgInstallSchemaFromString,
-  withAdvisoryLock,
-  UmzeptionPgStorage,
-} from '../index.js';
 
 describe('FastifyPostgresStyleDb', () => {
   it('exposes pool, query, connect and transact', () => {

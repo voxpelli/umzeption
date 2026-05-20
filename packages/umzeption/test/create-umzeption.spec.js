@@ -1,14 +1,12 @@
-import { describe, it, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
+import { afterEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import sinon from 'sinon';
-
-import { Umzug, memoryStorage } from 'umzug';
+import { memoryStorage, Umzug } from 'umzug';
 
 import { createUmzeption, createUmzeptionContext } from '../index.js';
-
 import { up as upMain } from './fixtures/migrations/foo-01.js';
 import { installSchema as installSchemaTestDependency } from './fixtures/test-dependency/index.js';
 import { up as upTestDependency } from './fixtures/test-dependency/migrations/foo-01.js';
@@ -19,6 +17,8 @@ const testDir = path.dirname(fileURLToPath(import.meta.url));
  * Capture current callCount baselines for fixture stubs so each test
  * can assert deltas instead of absolute counts (fixture stubs are
  * module-scoped and shared across the whole test run).
+ *
+ * @returns {{ installSchema: number, upMain: number, upTestDependency: number }}
  */
 function snapshotCallCounts () {
   return {
@@ -28,7 +28,10 @@ function snapshotCallCounts () {
   };
 }
 
-/** @param {any} [overrides] */
+/**
+ * @param {any} [overrides]
+ * @returns {ReturnType<typeof createUmzeption>}
+ */
 function buildInstance (overrides = {}) {
   const context = createUmzeptionContext('unknown', 'test');
 

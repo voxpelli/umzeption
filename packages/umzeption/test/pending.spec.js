@@ -1,8 +1,7 @@
-import { describe, it, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { afterEach, describe, it } from 'node:test';
 
 import sinon from 'sinon';
-
 import { memoryStorage } from 'umzug';
 
 import { createUmzeptionContext, umzeptionPending } from '../index.js';

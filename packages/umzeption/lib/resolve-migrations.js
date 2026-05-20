@@ -125,7 +125,7 @@ async function withTimeout (promise, ms, label) {
  * @returns {string[]}
  */
 export function sortMigrationFiles (files, _context) {
-  return [...files].sort();
+  return files.toSorted();
 }
 
 /**

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'tstyche';
 
+import {
+  BaseUmzeptionStorage,
+  createUmzeptionContext,
+  installSchemaFromString,
+  umzeption,
+} from '../index.js';
+
 import type {
   AnyUmzeptionContext,
   DefineUmzeptionContexts,
@@ -8,13 +15,6 @@ import type {
   UmzeptionLookupOptions,
   UmzeptionStorage,
 } from '../index.d.ts';
-
-import {
-  createUmzeptionContext,
-  installSchemaFromString,
-  umzeption,
-  BaseUmzeptionStorage,
-} from '../index.js';
 
 describe('UmzeptionContext', () => {
   it('should have type and value fields', () => {

@@ -1,9 +1,8 @@
-import { describe, it, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-
-import sinon from 'sinon';
+import { afterEach, describe, it } from 'node:test';
 
 import pg from 'pg';
+import sinon from 'sinon';
 
 import { createUmzeptionPgContext, withAdvisoryLock } from '../index.js';
 

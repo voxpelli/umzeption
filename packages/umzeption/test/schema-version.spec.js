@@ -1,10 +1,8 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-
-import { computeSchemaChecksum } from '../index.js';
-
 import path from 'node:path';
+import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { computeSchemaChecksum } from '../index.js';
 
 const fixturesDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'fixtures');
 

@@ -1,14 +1,11 @@
-import { describe, it, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-
-import sinon from 'sinon';
+import { afterEach, describe, it } from 'node:test';
 
 import pg from 'pg';
-import { Umzug } from 'umzug';
-
+import sinon from 'sinon';
 import { umzeption } from 'umzeption';
-import { UmzeptionPgStorage, createUmzeptionPgContext } from '../index.js';
-
+import { Umzug } from 'umzug';
+import { createUmzeptionPgContext, UmzeptionPgStorage } from '../index.js';
 import { down as downMain, up as upMain } from './fixtures/migrations/foo-01.js';
 import { installSchema as installSchemaTestDependency } from './fixtures/test-dependency/index.js';
 import { down as downTestDependency, up as upTestDependency } from './fixtures/test-dependency/migrations/foo-01.js';

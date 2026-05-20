@@ -1,12 +1,11 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-
-import sinon from 'sinon';
-
-import { installSchemaFromString, createUmzeptionContext } from 'umzeption';
-import { pgInstallSchemaFromString, createUmzeptionPgContext } from '../index.js';
+import { describe, it } from 'node:test';
 
 import pg from 'pg';
+import sinon from 'sinon';
+import { createUmzeptionContext, installSchemaFromString } from 'umzeption';
+
+import { createUmzeptionPgContext, pgInstallSchemaFromString } from '../index.js';
 
 describe('schema-helper', () => {
   describe('pgInstallSchemaFromString', () => {

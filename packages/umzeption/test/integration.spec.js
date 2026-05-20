@@ -1,12 +1,10 @@
-import { describe, it, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { afterEach, describe, it } from 'node:test';
 
 import sinon from 'sinon';
-
-import { Umzug, memoryStorage } from 'umzug';
+import { memoryStorage, Umzug } from 'umzug';
 
 import { createUmzeptionContext, umzeption } from '../index.js';
-
 import { down as downMain, up as upMain } from './fixtures/migrations/foo-01.js';
 import { installSchema as installSchemaTestDependency } from './fixtures/test-dependency/index.js';
 import { down as downTestDependency, up as upTestDependency } from './fixtures/test-dependency/migrations/foo-01.js';
@@ -156,7 +154,7 @@ describe('Integration', () => {
         glob: ['fixtures/migrations-unordered/*.js'],
         meta: import.meta,
         noop: true,
-        sortFiles: files => [...files].sort((a, b) => b.localeCompare(a)),
+        sortFiles: files => files.toSorted((a, b) => b.localeCompare(a)),
       }),
       context,
       storage,
@@ -189,7 +187,7 @@ describe('Integration', () => {
         dependencies: ['./fixtures/test-dependency-with-sort'],
         meta: import.meta,
         noop: true,
-        sortFiles: files => [...files].sort(),
+        sortFiles: files => files.toSorted(),
       }),
       context,
       storage,

@@ -1,12 +1,10 @@
-import { describe, it, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-
-import sinon from 'sinon';
+import { afterEach, describe, it } from 'node:test';
 
 import pg from 'pg';
-
+import sinon from 'sinon';
 import { BaseUmzeptionStorage, createUmzeptionContext } from 'umzeption';
-import { UmzeptionPgStorage, createUmzeptionPgContext } from '../index.js';
+import { createUmzeptionPgContext, UmzeptionPgStorage } from '../index.js';
 
 describe('BaseUmzeptionStorage', () => {
   it('should throw Unsupported context type from base query()', async () => {

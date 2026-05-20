@@ -1,6 +1,6 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
+import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { resolveMigrations, validateSortResult } from '../lib/resolve-migrations.js';
@@ -23,7 +23,7 @@ describe('resolveMigrations custom sortFiles', () => {
     const migrations = await resolveMigrations(
       definition,
       true,
-      { sortFiles: files => [...files].reverse() }
+      { sortFiles: files => files.toReversed() }
     );
 
     assert.deepStrictEqual(
@@ -40,7 +40,7 @@ describe('resolveMigrations custom sortFiles', () => {
     const migrations = await resolveMigrations(
       definition,
       true,
-      { sortFiles: files => [...files].sort((a, b) => b.localeCompare(a)) }
+      { sortFiles: files => files.toSorted((a, b) => b.localeCompare(a)) }
     );
 
     assert.deepStrictEqual(
@@ -66,7 +66,7 @@ describe('resolveMigrations custom sortFiles', () => {
     // function was actually invoked (no exception, same length).
     assert.strictEqual(migrations.length, 3);
     assert.deepStrictEqual(
-      migrations.map(m => m.name).sort(),
+      migrations.map(m => m.name).toSorted(),
       [
         'unordered|a-01.js',
         'unordered|b-02.js',
@@ -168,7 +168,7 @@ describe('resolveMigrations custom sortFiles', () => {
       {
         sortFiles: (files, ctx) => {
           invocations.push({ files: [...files], context: ctx });
-          return [...files].sort();
+          return files.toSorted();
         },
       }
     );
@@ -180,7 +180,7 @@ describe('resolveMigrations custom sortFiles', () => {
     // shape (fs.glob normalizes to forward slashes on Windows while the Node 20
     // readdirGlob fallback uses path.join backslashes — so a string startsWith
     // check on the absolute path fails cross-platform).
-    const basenames = (invocations[0]?.files ?? []).map(f => path.basename(f)).sort();
+    const basenames = (invocations[0]?.files ?? []).map(f => path.basename(f)).toSorted();
     assert.deepStrictEqual(basenames, ['a-01.js', 'b-02.js', 'c-03.js']);
   });
 });
@@ -189,7 +189,7 @@ describe('validateSortResult', () => {
   const input = ['/a/1.js', '/a/2.js', '/a/3.js'];
 
   it('returns the array unchanged when it is a valid permutation', () => {
-    const result = [...input].reverse();
+    const result = input.toReversed();
     assert.strictEqual(validateSortResult(input, result, 'example'), result);
   });
 
