@@ -1,5 +1,8 @@
 {
   "extends": "./tsconfig.json",
+  // Override the inherited `files: ["index.js"]` to []: the declaration build
+  // must NOT emit index.d.ts from index.js, or it clobbers the hand-authored
+  // index.d.ts (whose type-only re-exports index.js doesn't carry). Matches core.
   "files": [],
   "exclude": [
     "test/**/*.js"

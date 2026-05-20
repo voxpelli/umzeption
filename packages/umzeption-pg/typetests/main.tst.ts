@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'tstyche';
 
+import type { UmzeptionStorage } from 'umzeption';
+
 import type {
   FastifyPostgresStyleDb,
   UmzeptionPgContext,
@@ -42,16 +44,24 @@ describe('pgInstallSchemaFromString', () => {
 });
 
 describe('withAdvisoryLock', () => {
-  it('is a function', () => {
-    expect(withAdvisoryLock).type.toBeAssignableTo<Function>();
+  it('takes (context, lockId, fn, options?) and returns the callback result', () => {
+    expect(withAdvisoryLock).type.toBeAssignableTo<
+      (
+        context: UmzeptionPgContext,
+        lockId: number,
+        fn: () => Promise<unknown>,
+        options?: { lockTimeoutMs?: number }
+      ) => Promise<unknown>
+    >();
   });
 });
 
 describe('UmzeptionPgStorage', () => {
-  it('is constructable with no arguments and exposes the storage surface', () => {
+  it('is constructable with no arguments and satisfies the UmzeptionStorage contract', () => {
     expect(UmzeptionPgStorage).type.toBeConstructableWith();
-    expect(new UmzeptionPgStorage()).type.toHaveProperty('logMigration');
-    expect(new UmzeptionPgStorage()).type.toHaveProperty('unlogMigration');
-    expect(new UmzeptionPgStorage()).type.toHaveProperty('executed');
+    // The load-bearing contract: the pg adapter storage must be substitutable
+    // for the core UmzeptionStorage interface with a pg context. This catches
+    // method-signature drift that name-only property probes would miss.
+    expect(new UmzeptionPgStorage()).type.toBeAssignableTo<UmzeptionStorage<UmzeptionPgContext>>();
   });
 });

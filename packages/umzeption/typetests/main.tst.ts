@@ -24,6 +24,9 @@ describe('UmzeptionContext', () => {
 
 describe('DefineUmzeptionContexts', () => {
   it('should include the unknown context key by default', () => {
+    // Holds only because this test does NOT import umzeption-pg: importing it
+    // would activate the `declare module 'umzeption'` augmentation that adds
+    // the 'pg' key, making this `'unknown' | 'pg'`. Keep this file pg-free.
     expect<keyof DefineUmzeptionContexts>().type.toBe<'unknown'>();
   });
 });
@@ -57,7 +60,9 @@ describe('UmzeptionDependency', () => {
 });
 
 describe('UmzeptionLookupOptions', () => {
-  it('should have optional glob and installSchema', () => {
+  it('should be satisfiable with an empty object (all fields optional)', () => {
+    // An empty object is only assignable if every field — incl. glob and
+    // installSchema — is optional on UmzeptionLookupOptions.
     expect({}).type.toBeAssignableTo<UmzeptionLookupOptions<AnyUmzeptionContext>>();
   });
 });

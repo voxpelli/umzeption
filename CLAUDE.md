@@ -109,8 +109,8 @@ If you create a new hand-authored `.d.ts`, it **must** match `*-types.d.ts` or i
 ### The `check` script runs `clean` first
 Running `npm run check` in a package starts with `run-s clean && run-p check:*`. The clean step deletes generated `.d.ts` files. This means `check` validates from a clean state — if type declarations are stale, the clean+rebuild catches it.
 
-### Cross-package test fixtures
-`packages/umzeption-pg/test/pg-integration.spec.js` imports fixtures from `../../umzeption/test/fixtures/` via relative paths. This is acknowledged tech debt (marked `todo: 'Sprint 78'`). The test uses `plugin-importer` which resolves through the package, so the fixtures must be reachable.
+### Package-local test fixtures (no cross-package reach)
+Each package owns its test fixtures under `packages/<pkg>/test/fixtures/`. `umzeption-pg` has its own copy (sinon-stub `test-dependency` + `migrations`) rather than reaching into `packages/umzeption/test/fixtures/` — `plugin-importer`'s path-traversal guard rejects a `dependencies` path resolved outside the test's `cwd` (and a symlinked workspace package realpaths outside it too). A future shared `@umzeption/test-fixtures` package is blocked on a `plugin-importer` guard fix (gate the guard behind relative-path inputs only); tracked in `UPSTREAM-plugin-importer.md`. Keep fixtures package-local until then.
 
 ### knip configuration
 Each package has its own `.knip.jsonc`. Key entries:
@@ -223,7 +223,7 @@ Configured in `renovate.json`. Extends `github>voxpelli/renovate-config` (shared
 
 Both packages have two tsconfig files:
 - **`tsconfig.json`** — extends `@voxpelli/tsconfig/node20.json`, used for type-checking. `files: ["index.js"]`, includes `lib/**/*` and `test/**/*`, `compilerOptions: { "types": ["node"] }`
-- **`declaration.tsconfig.json`** — extends `./tsconfig.json`, excludes `test/**/*.js`, adds `declaration: true`, `declarationMap: true`, `emitDeclarationOnly: true`, `noEmit: false`
+- **`declaration.tsconfig.json`** — extends `./tsconfig.json`, **overrides `files: []`**, excludes `test/**/*.js`, adds `declaration: true`, `declarationMap: true`, `emitDeclarationOnly: true`, `noEmit: false`. The `files: []` override is load-bearing: without it the inherited `files: ["index.js"]` makes the declaration build emit `index.d.ts` from `index.js`, clobbering the hand-authored `index.d.ts` (whose type-only re-exports `index.js` doesn't carry) — and shipping thinner published types. Do not remove it.
 
 Inherited from `@voxpelli/tsconfig/node20.json`:
 - `strict: true`, `noUncheckedIndexedAccess: true`, `exactOptionalPropertyTypes: true`
