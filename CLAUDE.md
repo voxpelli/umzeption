@@ -38,8 +38,13 @@ Framework-agnostic modular database migrations built on [umzug](https://github.c
 - `promise/prefer-await-to-then`: use `await` instead of `.then()/.catch()/.finally()`
 - `consistent-function-scoping`: move functions to outermost possible scope
 - `jsdoc/require-returns`: JSDoc functions with return values need `@returns`
+- `perfectionist/sort-imports` + `sort-named-imports`: imports are grouped (builtin → external → parent/sibling) and alphabetized within groups; named-import lists are sorted. Also sorts `package.json` keys (scripts, deps). Mostly `--fix`-able — run `eslint --fix` before hand-editing import order
+- `unicorn/no-array-sort` + `no-array-reverse`: prefer non-mutating `arr.toSorted()`/`arr.toReversed()` over `[...arr].sort()`/`.reverse()` (Node 20+; matches the engines floor)
 - `security/detect-non-literal-regexp`: warnings expected for dynamic regex (OK)
+- `security/detect-non-literal-fs-filename`: warnings expected for dynamic `readdir` (OK)
 - `n/no-process-env`: warnings expected for `process.env` access (OK)
+
+(perfectionist + unicorn rules above arrived with `@voxpelli/eslint-config` v25.)
 
 ## Architecture Patterns
 
