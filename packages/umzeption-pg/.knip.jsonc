@@ -1,11 +1,8 @@
 {
-  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "$schema": "https://unpkg.com/knip@6/schema.json",
   "entry": [
     "index.d.ts",
     "lib/pg-types.d.ts",
     "typetests/**/*.tst.ts"
-  ],
-  "ignore": [],
-  "ignoreBinaries": ["run-s", "run-p", "tsc", "tstyche", "installed-check", "knip", "eslint", "type-coverage", "c8"],
-  "ignoreDependencies": ["npm-run-all2", "umzeption", "c8", "eslint", "installed-check", "type-coverage"]
+  ]
 }

@@ -113,10 +113,11 @@ Running `npm run check` in a package starts with `run-s clean && run-p check:*`.
 Each package owns its test fixtures under `packages/<pkg>/test/fixtures/`. `umzeption-pg` has its own copy (sinon-stub `test-dependency` + `migrations`) rather than reaching into `packages/umzeption/test/fixtures/` — `plugin-importer`'s path-traversal guard rejects a `dependencies` path resolved outside the test's `cwd` (and a symlinked workspace package realpaths outside it too). A future shared `@umzeption/test-fixtures` package is blocked on a `plugin-importer` guard fix (gate the guard behind relative-path inputs only); tracked in `UPSTREAM-plugin-importer.md`. Keep fixtures package-local until then.
 
 ### knip configuration
-Each package has its own `.knip.jsonc`. Key entries:
-- `entry`: must include `index.d.ts` and any `*-types.d.ts` so knip knows they're intentional
-- `ignoreBinaries`: tools invoked via `npm-run-all2` (`run-s`, `run-p`, `tsc`, etc.)
-- `ignoreDependencies`: devDeps used only via npm scripts (not imported in code)
+Each package has its own `.knip.jsonc` (schema pinned to `knip@6`). Key entries:
+- `entry`: must include `index.d.ts`, the package's `*-types.d.ts`, and `typetests/**/*.tst.ts` so knip knows they're intentional
+- `ignoreDependencies`: only genuinely-unreferenced devDeps. Core keeps `validate-conventional-commit` (husky-only, not yet enabled — see Husky gotcha); pg needs none.
+
+Note: knip 6 resolves binaries used in npm scripts (`run-s`/`run-p` from npm-run-all2, `tsc`, `eslint`, `c8`, `type-coverage`, `installed-check`, `knip`) and workspace packages (`umzeption`) on its own. Under knip 5 these required `ignoreBinaries`/`ignoreDependencies` entries; knip 6 flags them as redundant (config hints, non-fatal), so the lists were emptied. Re-add an entry only if knip starts reporting a script-only tool as unused.
 
 ### ESLint: `n/no-unsupported-features/node-builtins`
 The `fs.glob` API (Node 22+) triggers this rule. The dynamic `import('node:fs/promises')` + `'glob' in fs` check is specifically structured to avoid the lint error while still using the feature when available.
