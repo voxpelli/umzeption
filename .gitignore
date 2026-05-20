@@ -23,4 +23,7 @@ coverage/
 # Local sprint retrospectives (vp-beads retrospective) — not committed
 /RETRO-*.md
 
+# Internal sprint planning roadmap — not committed
+/SPRINT-PLAN.md
+
 # Library specific ones
