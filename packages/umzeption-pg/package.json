@@ -73,6 +73,6 @@
     "type-coverage": "^2.29.7",
     "typescript": "~6.0.0",
     "umzeption": "*",
-    "umzug": "^3.8.2"
+    "umzug": "^3.8.3"
   }
 }
