@@ -20,4 +20,7 @@ coverage/
 # Local upstream-friction tracking (UPSTREAM-tracker) — not committed
 /UPSTREAM-*.md
 
+# Local sprint retrospectives (vp-beads retrospective) — not committed
+/RETRO-*.md
+
 # Library specific ones
