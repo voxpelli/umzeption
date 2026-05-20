@@ -9,9 +9,9 @@ import { Umzug } from 'umzug';
 import { umzeption } from 'umzeption';
 import { UmzeptionPgStorage, createUmzeptionPgContext } from '../index.js';
 
-import { down as downMain, up as upMain } from '../../umzeption/test/fixtures/migrations/foo-01.js';
-import { installSchema as installSchemaTestDependency } from '../../umzeption/test/fixtures/test-dependency/index.js';
-import { down as downTestDependency, up as upTestDependency } from '../../umzeption/test/fixtures/test-dependency/migrations/foo-01.js';
+import { down as downMain, up as upMain } from './fixtures/migrations/foo-01.js';
+import { installSchema as installSchemaTestDependency } from './fixtures/test-dependency/index.js';
+import { down as downTestDependency, up as upTestDependency } from './fixtures/test-dependency/migrations/foo-01.js';
 
 function getDependencyStubCallCount ({
   down = 0,
@@ -32,7 +32,7 @@ describe('PG Integration', () => {
     sinon.restore();
   });
 
-  it('should resolve dependencies and create proper migrations', { todo: 'Sprint 78: decouple cross-package test fixtures' }, async () => {
+  it('should resolve dependencies and create proper migrations', async () => {
     const queryStub = sinon.stub(pg.Pool.prototype, 'query').resolves({ rows: [] });
 
     const context = createUmzeptionPgContext(new pg.Pool({
@@ -45,8 +45,8 @@ describe('PG Integration', () => {
 
     const umzug = new Umzug({
       migrations: umzeption({
-        dependencies: ['../../umzeption/test/fixtures/test-dependency'],
-        glob: ['../../umzeption/test/fixtures/migrations/*.js'],
+        dependencies: ['./fixtures/test-dependency'],
+        glob: ['./fixtures/migrations/*.js'],
         meta: import.meta,
       }),
       context,
@@ -69,6 +69,13 @@ describe('PG Integration', () => {
           '        name VARCHAR(255) PRIMARY KEY,\n' +
           '        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP\n' +
           '      )\n' +
+          '    ',
+        [],
+      ],
+      [
+        '\n' +
+          '      CREATE INDEX IF NOT EXISTS idx_umzeption_migrations_created_at\n' +
+          '      ON umzeption_migrations (created_at)\n' +
           '    ',
         [],
       ],
