@@ -1,10 +1,12 @@
+/** @import { DefineUmzeptionContexts, UmzeptionContext, UmzeptionContextTypes } from './advanced-types.d.ts' */
+
 /**
- * @template {import("./advanced-types.js").UmzeptionContextTypes} T
- * @template {import("./advanced-types.js").DefineUmzeptionContexts[T]["value"]} V
+ * @template {UmzeptionContextTypes} T
+ * @template {DefineUmzeptionContexts[T]["value"]} V
  * @param {T} type
  * @param {V} value
- * @returns {import("./advanced-types.js").UmzeptionContext<T, V>}
+ * @returns {UmzeptionContext<T, V>}
  */
 export function createUmzeptionContext (type, value) {
-  return /** @type {import("./advanced-types.js").UmzeptionContext<T, V>} */ ({ type, value });
+  return /** @type {UmzeptionContext<T, V>} */ ({ type, value });
 }

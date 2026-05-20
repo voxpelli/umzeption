@@ -15,6 +15,10 @@ export {
 } from './lib/main.js';
 
 export {
+  createUmzeption,
+} from './lib/create-umzeption.js';
+
+export {
   installSchemaFromString,
   registerSchemaInstaller,
 } from './lib/schema-helper.js';

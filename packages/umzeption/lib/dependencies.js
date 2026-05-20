@@ -6,10 +6,13 @@ import {
 
 import { ensureUmzeptionDefinition } from './definition.js';
 
+/** @import { AnyUmzeptionContext, UmzeptionDefinition } from './advanced-types.d.ts' */
+/** @import { LoadPluginsOptions, ProcessPluginContext } from 'plugin-importer' */
+
 /**
  * @param {unknown} value
- * @param {import('plugin-importer').ProcessPluginContext} context
- * @returns {import('./advanced-types.d.ts').UmzeptionDefinition}
+ * @param {ProcessPluginContext} context
+ * @returns {UmzeptionDefinition}
  */
 export function processDependency (value, { normalizedPluginName, pluginDir }) {
   if (!value || typeof value !== 'object') {
@@ -40,10 +43,10 @@ export function processDependency (value, { normalizedPluginName, pluginDir }) {
 }
 
 /**
- * @template {import('./advanced-types.d.ts').AnyUmzeptionContext} T
+ * @template {AnyUmzeptionContext} T
  * @param {string[]} dependencies
- * @param {import('plugin-importer').LoadPluginsOptions} [options]
- * @returns {Promise<import('./advanced-types.d.ts').UmzeptionDefinition<T>[]>}
+ * @param {LoadPluginsOptions} [options]
+ * @returns {Promise<UmzeptionDefinition<T>[]>}
  */
 export async function loadDependencies (dependencies, options) {
   const pluginLoader = loadPlugins(processDependency, options);

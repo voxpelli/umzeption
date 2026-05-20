@@ -115,14 +115,71 @@ async function withTimeout (promise, ms, label) {
 }
 
 /**
+ * Default lexicographic sort applied to migration file paths.
+ *
+ * The native glob does not guarantee an order. We sort here so consumers see
+ * the same execution order regardless of filesystem.
+ *
+ * @param {string[]} files
+ * @param {{ pluginDir: string }} [_context]
+ * @returns {string[]}
+ */
+export function sortMigrationFiles (files, _context) {
+  return [...files].sort();
+}
+
+/**
+ * Validate that a custom `sortFiles` callback returned a permutation of its
+ * input. Catches the data-loss class of bugs (drops, duplicates, synthesized
+ * paths) at the boundary before bogus paths flow into the importer.
+ *
+ * Precondition: `input` must be duplicate-free. The pigeonhole permutation
+ * check (`Set(result).size === input.length`) relies on this — callers inside
+ * this module dedupe the glob output (`[...new Set(...)]`) before passing it,
+ * since `resolveGlob` does not dedupe across overlapping glob patterns.
+ *
+ * @param {string[]} input
+ * @param {unknown} result
+ * @param {string} definitionName
+ * @returns {string[]}
+ */
+export function validateSortResult (input, result, definitionName) {
+  if (!Array.isArray(result)) {
+    throw new TypeError(
+      `sortFiles for "${definitionName}" must return an array, got ${typeof result}`
+    );
+  }
+  if (result.length !== input.length) {
+    throw new Error(
+      `sortFiles for "${definitionName}" returned ${result.length} file(s) but received ${input.length}; the callback must return a permutation of its input`
+    );
+  }
+  const inputSet = new Set(input);
+  for (const file of result) {
+    if (!inputSet.has(file)) {
+      throw new Error(
+        `sortFiles for "${definitionName}" returned a path not present in the input: "${file}"`
+      );
+    }
+  }
+  if (new Set(result).size !== input.length) {
+    throw new Error(
+      `sortFiles for "${definitionName}" returned duplicate entries; the callback must return a permutation of its input`
+    );
+  }
+  return result;
+}
+
+/**
  * @template {import('./advanced-types.d.ts').AnyUmzeptionContext} T
  * @param {Pick<import('./advanced-types.d.ts').UmzeptionDefinition<T>, 'glob' | 'name' | 'noPrefix' | 'pluginDir'>} definition
  * @param {boolean} [noop] - if set then the up/down migrations will have no operation
- * @param {{ timeout?: number }} [options]
+ * @param {{ timeout?: number, sortFiles?: import('./advanced-types.d.ts').UmzeptionDependency['sortFiles'] }} [options]
  * @returns {Promise<import('umzug').RunnableMigration<T>[]>}
  */
 export async function resolveMigrations (definition, noop = false, options) {
   const timeout = options?.timeout;
+  const sortFiles = options?.sortFiles;
 
   if (timeout !== undefined && (typeof timeout !== 'number' || !Number.isFinite(timeout) || timeout <= 0)) {
     throw new TypeError(`Invalid timeout value: ${timeout}. Must be a positive finite number.`);
@@ -134,7 +191,28 @@ export async function resolveMigrations (definition, noop = false, options) {
     pluginDir,
   } = definition;
 
-  const files = (await resolveGlob(glob, pluginDir)).sort();
+  const sortFn = sortFiles ?? sortMigrationFiles;
+
+  // Wrap discovery + sort + validation so a throwing/data-losing custom
+  // sortFiles surfaces as an attributed error with its cause preserved.
+  /** @returns {Promise<string[]>} */
+  const resolveFiles = async () => {
+    try {
+      // Dedupe across glob patterns: a file matched by two overlapping
+      // patterns (e.g. ['*.js', 'a-*.js']) must appear once, not error. This
+      // also restores validateSortResult's dup-free-input precondition, so a
+      // default-sort run can never spuriously report "duplicate entries".
+      const discovered = [...new Set(await resolveGlob(glob, pluginDir))];
+      return validateSortResult(discovered, sortFn(discovered, { pluginDir }), definitionName);
+    } catch (cause) {
+      throw new Error(
+        `Failed to resolve migrations for "${definitionName}" (pluginDir: ${pluginDir})`,
+        { cause }
+      );
+    }
+  };
+
+  const files = await resolveFiles();
 
   if (files.length === 0 && glob.length > 0 && !process.env['UMZEPTION_SUPPRESS_WARNINGS']) {
     process.emitWarning(

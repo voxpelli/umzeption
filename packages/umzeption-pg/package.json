@@ -20,7 +20,7 @@
   "license": "MIT",
   "engines": {
     "node": "^20.19.0 || ^22.13.0 || >=24",
-    "typescript": ">=5.8"
+    "typescript": ">=5.9.0"
   },
   "type": "module",
   "exports": "./index.js",
@@ -57,11 +57,11 @@
     "pg": "^8.11.2"
   },
   "devDependencies": {
-    "@types/node": "^20.19.37",
+    "@types/node": "^20.19.41",
     "@types/pg": "^8.11.10",
     "@types/sinon": "^17.0.3",
     "@voxpelli/eslint-config": "^23.0.0",
-    "@voxpelli/tsconfig": "^16.1.0",
+    "@voxpelli/tsconfig": "^16.2.1",
     "c8": "^11.0.0",
     "eslint": "^9.39.4",
     "installed-check": "^10.0.1",
@@ -69,7 +69,7 @@
     "npm-run-all2": "^8.0.4",
     "sinon": "^19.0.2",
     "type-coverage": "^2.29.7",
-    "typescript": "~5.9.3",
+    "typescript": "~6.0.0",
     "umzeption": "*",
     "umzug": "^3.8.2"
   }

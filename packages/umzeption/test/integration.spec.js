@@ -145,6 +145,72 @@ describe('Integration', () => {
     assert.strictEqual(installSchema.callCount, 1);
   });
 
+  it('should honour a custom sortFiles option end-to-end', async () => {
+    const context = createUmzeptionContext('unknown', 'test');
+
+    const storage = memoryStorage();
+
+    const umzug = new Umzug({
+      migrations: umzeption({
+        // Use the three-file unordered fixture so sort has visible effect.
+        glob: ['fixtures/migrations-unordered/*.js'],
+        meta: import.meta,
+        noop: true,
+        sortFiles: files => [...files].sort((a, b) => b.localeCompare(a)),
+      }),
+      context,
+      storage,
+      logger: sinon.stub(console),
+    });
+
+    await umzug.up();
+
+    const executed = await storage.executed({ context });
+
+    // ':install' is added by lookup separately and not affected by sortFiles.
+    // The three migration files appear in reverse-lexicographic order.
+    assert.deepStrictEqual(executed, [
+      ':install',
+      'c-03.js',
+      'b-02.js',
+      'a-01.js',
+    ]);
+  });
+
+  it('per-dependency sortFiles wins over top-level sortFiles', async () => {
+    const context = createUmzeptionContext('unknown', 'test');
+
+    const storage = memoryStorage();
+
+    const umzug = new Umzug({
+      migrations: umzeption({
+        // The dep below exports its own sortFiles (reverse). Top-level
+        // tries to force forward order; per-dep must still win.
+        dependencies: ['./fixtures/test-dependency-with-sort'],
+        meta: import.meta,
+        noop: true,
+        sortFiles: files => [...files].sort(),
+      }),
+      context,
+      storage,
+      logger: sinon.stub(console),
+    });
+
+    await umzug.up();
+
+    const executed = await storage.executed({ context });
+
+    // Dep's own sortFiles (reverse) wins over the top-level (forward).
+    // ':install' is the main app's stub (no glob → no migrations).
+    assert.deepStrictEqual(executed, [
+      'test-dependency-with-sort:install',
+      ':install',
+      'test-dependency-with-sort|c-03.js',
+      'test-dependency-with-sort|b-02.js',
+      'test-dependency-with-sort|a-01.js',
+    ]);
+  });
+
   it('should work without specifying top level installSchema', async () => {
     const context = createUmzeptionContext('unknown', 'test');
 
@@ -177,6 +243,82 @@ describe('Integration', () => {
       getDependencyStubCallCount(),
       expectedCallCount,
       'Unexpected calls of dependency stubs'
+    );
+  });
+});
+
+/**
+ * @param {unknown} sortFiles
+ * @returns {Promise<unknown>}
+ */
+function buildUmzeptionWithSort (sortFiles) {
+  const context = createUmzeptionContext('unknown', 'test');
+  return umzeption({
+    glob: [],
+    meta: import.meta,
+    // @ts-expect-error intentional bad value to verify runtime guard
+    sortFiles,
+  })(context);
+}
+
+describe('sortFiles validation', () => {
+  it('rejects null top-level sortFiles', async () => {
+    await assert.rejects(
+      // eslint-disable-next-line unicorn/no-null
+      () => buildUmzeptionWithSort(null),
+      (/** @type {any} */ err) => {
+        assert.ok(err instanceof TypeError);
+        assert.match(err.message, /sortFiles option must be a function or undefined/);
+        assert.match(err.message, /got object/);
+        return true;
+      }
+    );
+  });
+
+  it('rejects false top-level sortFiles', async () => {
+    await assert.rejects(
+      () => buildUmzeptionWithSort(false),
+      (/** @type {any} */ err) => {
+        assert.ok(err instanceof TypeError);
+        assert.match(err.message, /got boolean/);
+        return true;
+      }
+    );
+  });
+
+  it('rejects a string top-level sortFiles', async () => {
+    await assert.rejects(
+      () => buildUmzeptionWithSort('sort-by-name'),
+      (/** @type {any} */ err) => {
+        assert.ok(err instanceof TypeError);
+        assert.match(err.message, /got string/);
+        return true;
+      }
+    );
+  });
+
+  it('accepts undefined top-level sortFiles (falls to default)', async () => {
+    // eslint-disable-next-line unicorn/no-useless-undefined
+    await assert.doesNotReject(() => buildUmzeptionWithSort(undefined));
+  });
+
+  it('rejects a non-function per-dependency sortFiles with the dep name in the message', async () => {
+    // Stub plugin-importer's resolver indirectly by routing a bad sortFiles
+    // through the dependency loading path. We inject the dep definition
+    // directly via the `dependencies` option, which exercises lookup.js's
+    // per-dep guard at line ~78.
+    const context = createUmzeptionContext('unknown', 'test');
+    await assert.rejects(
+      () => umzeption({
+        dependencies: ['./fixtures/test-dependency-with-bad-sort'],
+        meta: import.meta,
+      })(context),
+      (/** @type {any} */ err) => {
+        assert.ok(err instanceof TypeError);
+        assert.match(err.message, /sortFiles for dependency "test-dependency-with-bad-sort"/);
+        assert.match(err.message, /got number/);
+        return true;
+      }
     );
   });
 });

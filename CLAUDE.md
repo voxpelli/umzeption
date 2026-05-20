@@ -20,7 +20,7 @@ Framework-agnostic modular database migrations built on [umzug](https://github.c
 - TypeScript is used **only** for type-checking (`tsc`) and `.d.ts` generation — never write `.ts` source files
 - Module format: **ESM** (`"type": "module"` everywhere). Use `import`/`export`, not `require`
 - Hand-authored type declaration files must use the naming pattern `*-types.d.ts` (e.g., `pg-types.d.ts`). The clean script deletes `*.d.ts` files but preserves `*-types.d.ts`
-- Node.js targets: `^20.19.0 || ^22.13.0 || >=24`. TypeScript: `>=5.8`
+- Node.js targets: `^20.19.0 || ^22.13.0 || >=24`. TypeScript: `>=5.9.0` (raised from `>=5.8` with `@voxpelli/tsconfig ^16.2.1`; devDep pins `~6.0.0`)
 
 ### CI Checks (all must pass)
 - `check:tsc` — TypeScript compilation
@@ -76,11 +76,15 @@ Use these instead of bare `new Error(...)` / `new TypeError(...)` for throw site
 `BaseUmzeptionStorage` supports configurable `tableName` with SQL injection prevention via regex validation. The `#tableEnsured` flag is set **after** successful table creation (not before).
 
 ### Migration Resolution
-`resolveMigrations` in the core package:
+`resolveMigrations(definition, noop, options)` in the core package:
 - Uses `fs.glob` (Node 22+) with automatic fallback to `readdir`-based glob for Node 20
 - The `fs.glob` import uses dynamic `import()` to avoid ESLint `n/no-unsupported-features` errors
 - Supports `timeout` option via `withTimeout` (Promise.race + clearTimeout in finally)
 - Validates migration names (no `|` or `:`), detects duplicates, provides ESM import hints
+- Accepts `options.sortFiles` (a `(files, { pluginDir }) => string[]` transformer); defaults to lexicographic `sortMigrationFiles`. `lookup.js` resolves precedence (`definition.sortFiles ?? topLevelSortFiles`) and threads it through `options`. `validateSortResult` enforces that a custom sortFiles returns a permutation of its input — the cheapest sound check is length-equality + membership loop + `Set(result).size === input.length` (pigeonhole; relies on the glob's dup-free output).
+
+### Factory (createUmzeption)
+`createUmzeption({ umzeption, context, storage, ... })` (in `lib/create-umzeption.js`) returns `{ umzug, installUmzug (lazy getter), runAsCLI }`. The `install` subcommand is implemented by rewriting argv to `['up', ...rest]` against an install-mode Umzug, so `install --help` shows `up`'s help and `up`-only flags pass through. **Convention:** when a factory owns mode selection that callers must not override, type the inner options as `Omit<…, 'flag'>` (here `umzeption: Omit<UmzeptionLookupOptions, 'install'>`) so the mistake fails at compile time rather than being silently overridden; lock it in with an `@ts-expect-error` test.
 
 ## Testing Conventions
 
@@ -180,9 +184,9 @@ Each package's `tsc` uses `--declaration --emitDeclarationOnly` — it only gene
 Both packages use a single `"exports": "./index.js"` entry point. The `index.js` re-exports from `lib/` modules. The `index.d.ts` files are hand-authored (committed) with type-only re-exports and may include overloaded signatures not expressible in JSDoc.
 
 ### umzeption (core) exports
-- **Functions**: `umzeption`, `umzeptionPending`, `createUmzeptionContext`, `installSchemaFromString`, `registerSchemaInstaller`, `computeSchemaChecksum`
+- **Functions**: `umzeption`, `umzeptionPending`, `createUmzeption`, `createUmzeptionContext`, `installSchemaFromString`, `registerSchemaInstaller`, `computeSchemaChecksum`
 - **Classes**: `BaseUmzeptionStorage`, `UmzeptionError`, `UmzeptionValidationError`, `UmzeptionMigrationImportError`, `UmzeptionUnsupportedContextError`
-- **Types** (via `index.d.ts`): `AnyUmzeptionContext`, `DefineUmzeptionContexts`, `UmzeptionContext`, `UmzeptionDefinition`, `UmzeptionDependency`, `UmzeptionLookupOptions`, `UmzeptionStorage`
+- **Types** (via `index.d.ts`): `AnyUmzeptionContext`, `CreateUmzeptionOptions`, `DefineUmzeptionContexts`, `UmzeptionContext`, `UmzeptionDefinition`, `UmzeptionDependency`, `UmzeptionInstance`, `UmzeptionLookupOptions`, `UmzeptionStorage`
 
 ### umzeption-pg exports
 - **Functions**: `createUmzeptionPgContext`, `pgInstallSchemaFromString`, `withAdvisoryLock`
@@ -193,7 +197,7 @@ Both packages use a single `"exports": "./index.js"` entry point. The `index.js`
 
 Located in `.github/workflows/`. Most are thin wrappers delegating to `voxpelli/ghatemplates` reusable workflows:
 
-- **`nodejs.yml`** ("Node CI") — test matrix: Node 20/22/24 × ubuntu/windows, runs `npm run test-ci`
+- **`nodejs.yml`** ("Node CI") — test matrix: Node 20/22/23/24 × ubuntu/windows, runs `npm run test-ci`
 - **`lint.yml`** ("Linting") — lint on ubuntu-latest with Node LTS
 - **`compliance.yml`** ("Compliance") — PR compliance check via `mtfoley/pr-compliance-action`
 - **`release-please.yml`** — version bumps and changelogs
@@ -204,7 +208,7 @@ Located in `.github/workflows/`. Most are thin wrappers delegating to `voxpelli/
 ## Release Please Configuration
 
 - Config: `.github/release-please/config.json` — both packages listed
-  - `bump-minor-pre-major: true` — breaking changes only bump minor while `< 1.0.0`
+  - `bump-minor-pre-major: true` — breaking changes only bump minor while `< 1.0.0`. NOTE: this is the config setting, NOT a release-please default — by default `0.x.y` + `!:` bumps to `1.0.0`.
   - `bump-patch-for-minor-pre-major: true` — features only bump patch while `< 1.0.0`
   - `include-component-in-tag: false` — tags are `v<version>`, not `<component>-v<version>`
   - `release-type: "node"`

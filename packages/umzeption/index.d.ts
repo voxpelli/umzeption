@@ -1,9 +1,11 @@
 export type {
   AnyUmzeptionContext,
+  CreateUmzeptionOptions,
   DefineUmzeptionContexts,
   UmzeptionContext,
   UmzeptionDefinition,
   UmzeptionDependency,
+  UmzeptionInstance,
   UmzeptionLookupOptions,
   UmzeptionStorage,
 } from './lib/advanced-types.d.ts';
@@ -23,6 +25,10 @@ export {
   umzeption,
   umzeptionPending,
 } from './lib/main.js';
+
+export {
+  createUmzeption,
+} from './lib/create-umzeption.js';
 
 export {
   installSchemaFromString,
