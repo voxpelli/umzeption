@@ -17,4 +17,7 @@ coverage/
 !/packages/*/index.d.ts
 !/packages/*/lib/**/*-types.d.ts
 
+# Local upstream-friction tracking (UPSTREAM-tracker) — not committed
+/UPSTREAM-*.md
+
 # Library specific ones
