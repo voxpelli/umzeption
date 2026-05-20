@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/voxpelli/umzeption/compare/v0.5.0...v0.5.1) (2026-05-20)
+
+
+### 🩹 Fixes
+
+* use OIDC to publish the module ([#47](https://github.com/voxpelli/umzeption/issues/47)) ([a556474](https://github.com/voxpelli/umzeption/commit/a556474bc23cc140d11d6c1a10096e2c5343ebf8))
+
 ## [0.5.0](https://github.com/voxpelli/umzeption/compare/v0.4.1...v0.5.0) (2026-05-19)
 
 
