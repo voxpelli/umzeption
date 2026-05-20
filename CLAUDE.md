@@ -207,8 +207,8 @@ Located in `.github/workflows/`. Most are thin wrappers delegating to `voxpelli/
 - **`lint.yml`** ("Linting") — lint on ubuntu-latest with Node LTS
 - **`compliance.yml`** ("Compliance") — PR compliance check via `mtfoley/pr-compliance-action`
 - **`release-please.yml`** — version bumps and changelogs
-- **`ts-internal.yml`** ("Type Checks, Internal Types") — tsc against TS 5.8 + next, runs on cron Mon/Wed/Fri
-- **`tstyche.yml`** ("Type Tests, External Types") — tstyche against TS >=5.8 + next, same cron schedule
+- **`ts-internal.yml`** ("Type Checks, Internal Types") — tsc against TS 5.9 + next, runs on cron Mon/Wed/Fri
+- **`tstyche.yml`** ("Type Tests, External Types") — tstyche against TS >=5.9 + next, same cron schedule
 - **`dependency-review.yml`** — dependency review on PRs
 
 ## Release Please Configuration
