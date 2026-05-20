@@ -20,7 +20,7 @@
   "license": "MIT",
   "engines": {
     "node": "^20.19.0 || ^22.13.0 || >=24",
-    "typescript": ">=5.9.0"
+    "typescript": ">=5.9"
   },
   "type": "module",
   "exports": "./index.js",
@@ -37,12 +37,13 @@
     "build:0": "run-s clean",
     "build:1-declaration": "tsc -p declaration.tsconfig.json",
     "build": "run-s build:*",
-    "check:installed-check": "installed-check",
+    "check-type-tests": "run-s build && tstyche --target \"$(node -p \"require('./package.json').engines.typescript\")\" --reporters list,summary && run-s clean",
+    "check:installed-check": "installed-check -i tstyche",
     "check:knip": "knip",
     "check:lint": "eslint",
     "check:tsc": "tsc",
     "check:type-coverage": "type-coverage --detail --strict --at-least 99 --ignore-files 'test/*'",
-    "check": "run-s clean && run-p check:* --continue-on-error",
+    "check": "run-s clean && run-p check:* --continue-on-error && run-s check-type-tests",
     "clean": "node ../../scripts/clean-declarations.js",
     "prepublishOnly": "run-s build",
     "test:node": "c8 --reporter=lcov --reporter text node --test",
@@ -68,6 +69,7 @@
     "knip": "^5.86.0",
     "npm-run-all2": "^8.0.4",
     "sinon": "^19.0.2",
+    "tstyche": "^6.2.0",
     "type-coverage": "^2.29.7",
     "typescript": "~6.0.0",
     "umzeption": "*",

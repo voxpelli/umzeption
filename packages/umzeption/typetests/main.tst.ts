@@ -24,7 +24,7 @@ describe('UmzeptionContext', () => {
 
 describe('DefineUmzeptionContexts', () => {
   it('should include the unknown context key by default', () => {
-    expect<keyof DefineUmzeptionContexts>().type.toEqual<'unknown'>();
+    expect<keyof DefineUmzeptionContexts>().type.toBe<'unknown'>();
   });
 });
 
@@ -58,8 +58,7 @@ describe('UmzeptionDependency', () => {
 
 describe('UmzeptionLookupOptions', () => {
   it('should have optional glob and installSchema', () => {
-    const _opts: UmzeptionLookupOptions<AnyUmzeptionContext> = {};
-    expect(_opts).type.toBeDefined();
+    expect({}).type.toBeAssignableTo<UmzeptionLookupOptions<AnyUmzeptionContext>>();
   });
 });
 
