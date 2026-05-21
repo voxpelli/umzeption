@@ -26,4 +26,8 @@ coverage/
 # Internal sprint planning roadmap — not committed
 /SPRINT-PLAN.md
 
+# Local Claude Code config (settings, local overrides, worktrees) — not committed.
+# CLAUDE.md lives at the repo root, outside .claude/, and stays tracked.
+/.claude/
+
 # Library specific ones
