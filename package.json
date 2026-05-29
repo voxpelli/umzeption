@@ -81,7 +81,7 @@
     "installed-check": "^9.3.0",
     "knip": "^5.38.3",
     "npm-run-all2": "^7.0.1",
-    "pg": "^8.13.1",
+    "pg": "^8.21.0",
     "sinon": "^19.0.2",
     "type-coverage": "^2.29.7",
     "typescript": "~6.0.0",
