@@ -70,8 +70,8 @@
     "plugin-importer": "^0.1.1"
   },
   "devDependencies": {
-    "@types/node": "^20.19.41",
-    "@types/pg": "^8.11.10",
+    "@types/node": "^20.19.43",
+    "@types/pg": "^8.23.1",
     "@types/sinon": "^17.0.3",
     "@voxpelli/eslint-config": "^22.1.0",
     "@voxpelli/tsconfig": "^16.2.1",
@@ -83,8 +83,8 @@
     "npm-run-all2": "^7.0.1",
     "pg": "^8.13.1",
     "sinon": "^19.0.2",
-    "type-coverage": "^2.29.7",
-    "typescript": "~6.0.0",
+    "type-coverage": "^2.30.4",
+    "typescript": "~6.0.3",
     "umzug": "^3.8.2",
     "validate-conventional-commit": "^1.0.4"
   }
