@@ -73,19 +73,19 @@
     "@types/node": "^20.19.41",
     "@types/pg": "^8.11.10",
     "@types/sinon": "^17.0.3",
-    "@voxpelli/eslint-config": "^22.1.0",
+    "@voxpelli/eslint-config": "^25.1.0",
     "@voxpelli/tsconfig": "^16.2.1",
     "c8": "^10.1.2",
-    "eslint": "^9.16.0",
+    "eslint": "^10.13.0",
     "husky": "^9.1.7",
-    "installed-check": "^9.3.0",
-    "knip": "^5.38.3",
+    "installed-check": "^11.0.0",
+    "knip": "^6.43.0",
     "npm-run-all2": "^7.0.1",
     "pg": "^8.13.1",
     "sinon": "^19.0.2",
     "type-coverage": "^2.29.7",
     "typescript": "~6.0.0",
     "umzug": "^3.8.2",
-    "validate-conventional-commit": "^1.0.4"
+    "validate-conventional-commit": "^2.0.0"
   }
 }
